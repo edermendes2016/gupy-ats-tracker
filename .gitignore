@@ -1,0 +1,52 @@
+# ---------------------------------------------------------------
+# DADOS REAIS NUNCA ENTRAM NO GIT
+# Tudo que identifica o candidato ou as empresas fica em private/
+# (ou fora do repositório, via --dados / GUPY_TRACKER_DADOS).
+# ---------------------------------------------------------------
+private/
+privado/
+data/*
+!data/exemplo/
+!data/exemplo/**
+
+# Currículos, cartas e exportações
+*.pdf
+*.docx
+*.doc
+*.odt
+curriculo*
+cv*
+resume*
+
+# Capturas de tela das vagas / do perfil na Gupy
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.har
+
+# Segredos e credenciais
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+secrets.*
+credentials.*
+cookies*
+token*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# Editores / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
