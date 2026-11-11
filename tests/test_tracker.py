@@ -122,6 +122,15 @@ class Cli(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 main(args)
 
+    def test_gravacao_nunca_cai_nos_dados_de_exemplo(self):
+        import os
+        from unittest import mock
+        with mock.patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("GUPY_TRACKER_DADOS", None)
+            with mock.patch.object(armazenamento, "PADRAO_PRIVADO", Path("/nao/existe/vagas.json")):
+                self.assertEqual(armazenamento.resolver_caminho(None), armazenamento.EXEMPLO)
+                self.assertEqual(armazenamento.resolver_caminho(None, escrita=True), Path("/nao/existe/vagas.json"))
+
     def test_dados_de_exemplo_sao_validos(self):
         self.assertEqual(len(armazenamento.carregar(armazenamento.EXEMPLO)), 4)
 

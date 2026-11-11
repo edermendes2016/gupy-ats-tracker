@@ -130,13 +130,13 @@ def criar_parser() -> argparse.ArgumentParser:
         a.add_argument(f"--{nome}", type=int, required=True, metavar="0-100", help=f"peso {peso}%%")
     a.add_argument("--palavra-chave", action="append", help="palavra-chave da vaga presente no currículo (repetível)")
     a.add_argument("--lacuna", action="append", help="requisito da vaga que o currículo não cobre (repetível)")
-    a.set_defaults(func=cmd_adicionar)
+    a.set_defaults(func=cmd_adicionar, escrita=True)
 
     s = sub.add_parser("status", help="atualiza o status de uma vaga")
     s.add_argument("id")
     s.add_argument("novo_status", choices=STATUS)
     s.add_argument("--data", default=hoje)
-    s.set_defaults(func=cmd_status)
+    s.set_defaults(func=cmd_status, escrita=True)
 
     r = sub.add_parser("ranking", help="mostra o ranking no terminal")
     r.add_argument("--anonimo", action="store_true")
@@ -160,7 +160,7 @@ def criar_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = criar_parser().parse_args(argv)
     try:
-        return args.func(args, armazenamento.resolver_caminho(args.dados))
+        return args.func(args, armazenamento.resolver_caminho(args.dados, getattr(args, "escrita", False)))
     except ValueError as e:
         raise SystemExit(f"erro: {e}")
 
