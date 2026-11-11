@@ -12,14 +12,18 @@ PADRAO_PRIVADO = RAIZ / "private" / "vagas.json"
 EXEMPLO = RAIZ / "data" / "exemplo" / "vagas.json"
 
 
-def resolver_caminho(argumento: str | None) -> Path:
-    """--dados > GUPY_TRACKER_DADOS > private/vagas.json > dados de exemplo."""
+def resolver_caminho(argumento: str | None, escrita: bool = False) -> Path:
+    """--dados > GUPY_TRACKER_DADOS > private/vagas.json > dados de exemplo.
+
+    Comandos que gravam nunca caem nos dados de exemplo: sem um arquivo
+    indicado, eles usam (e criam) private/vagas.json.
+    """
     if argumento:
         return Path(argumento)
     env = os.environ.get("GUPY_TRACKER_DADOS")
     if env:
         return Path(env)
-    return PADRAO_PRIVADO if PADRAO_PRIVADO.exists() else EXEMPLO
+    return PADRAO_PRIVADO if escrita or PADRAO_PRIVADO.exists() else EXEMPLO
 
 
 def carregar(caminho: Path) -> list[dict]:
