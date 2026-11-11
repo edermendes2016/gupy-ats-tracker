@@ -1,0 +1,6 @@
+#!/bin/sh
+# Bloqueia o commit se algum nome de empresa real aparecer nos arquivos em stage.
+# Ativar: git config core.hooksPath scripts/hooks
+cd "$(git rev-parse --show-toplevel)" || exit 1
+PY=$(command -v python3 || command -v python) || { echo "pre-commit: python não encontrado" >&2; exit 1; }
+exec "$PY" -m gupy_tracker verificar --staged

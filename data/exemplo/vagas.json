@@ -1,0 +1,64 @@
+[
+  {
+    "id": "2026-01-12-acme-sistemas-desenvolvedor-net-pleno",
+    "data": "2026-01-12",
+    "empresa": "ACME Sistemas (fictícia)",
+    "cargo": "Desenvolvedor .NET Pleno",
+    "senioridade": "pleno",
+    "area": "dotnet",
+    "modelo": "remoto",
+    "status": "entrevista",
+    "criterios": {"obrigatorios": 90, "desejaveis": 70, "experiencia": 90, "dominio": 80, "logistica": 100},
+    "palavras_chave": ["C#", ".NET 8", "Clean Architecture", "CQRS", "SQL Server"],
+    "lacunas": ["RabbitMQ em produção"],
+    "historico": [
+      {"data": "2026-01-12", "status": "candidatada"},
+      {"data": "2026-01-20", "status": "entrevista"}
+    ]
+  },
+  {
+    "id": "2026-01-15-globex-engenheiro-cloud-aws-junior",
+    "data": "2026-01-15",
+    "empresa": "Globex (fictícia)",
+    "cargo": "Engenheiro Cloud AWS Júnior",
+    "senioridade": "junior",
+    "area": "cloud",
+    "modelo": "hibrido",
+    "status": "candidatada",
+    "criterios": {"obrigatorios": 55, "desejaveis": 40, "experiencia": 80, "dominio": 50, "logistica": 60},
+    "palavras_chave": ["CI/CD", "Docker", "Kubernetes"],
+    "lacunas": ["Certificação AWS", "Terraform"],
+    "historico": [{"data": "2026-01-15", "status": "candidatada"}]
+  },
+  {
+    "id": "2026-01-18-initech-desenvolvedor-full-stack-senior",
+    "data": "2026-01-18",
+    "empresa": "Initech (fictícia)",
+    "cargo": "Desenvolvedor Full Stack Sênior",
+    "senioridade": "senior",
+    "area": "fullstack",
+    "modelo": "remoto",
+    "status": "recusada",
+    "criterios": {"obrigatorios": 75, "desejaveis": 60, "experiencia": 70, "dominio": 60, "logistica": 100},
+    "palavras_chave": ["Angular", "ASP.NET Core", "microsserviços"],
+    "lacunas": ["Liderança técnica formal"],
+    "historico": [
+      {"data": "2026-01-18", "status": "candidatada"},
+      {"data": "2026-02-02", "status": "recusada"}
+    ]
+  },
+  {
+    "id": "2026-01-22-umbrella-desenvolvedor-java-senior",
+    "data": "2026-01-22",
+    "empresa": "Umbrella (fictícia)",
+    "cargo": "Desenvolvedor Java Sênior",
+    "senioridade": "senior",
+    "area": "outra",
+    "modelo": "presencial",
+    "status": "descartada",
+    "criterios": {"obrigatorios": 20, "desejaveis": 30, "experiencia": 60, "dominio": 40, "logistica": 10},
+    "palavras_chave": ["SQL", "Scrum"],
+    "lacunas": ["Java", "Spring Boot", "presencial em outra cidade"],
+    "historico": [{"data": "2026-01-22", "status": "descartada"}]
+  }
+]
