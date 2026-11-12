@@ -36,12 +36,15 @@ def _grpc():
 
 
 try:
-    from .conversao_proto import requisicao_para_vaga, vaga_para_proto
+    from .conversao_proto import requisicao_para_vaga, status_do_proto, vaga_para_proto
 except ImportError:  # sem o código gerado: _grpc() avisa antes de qualquer chamada
     def requisicao_para_vaga(*_a, **_k):
         _grpc()
 
     def vaga_para_proto(*_a, **_k):
+        _grpc()
+
+    def status_do_proto(*_a, **_k):
         _grpc()
 
 
@@ -59,7 +62,7 @@ class VagasServicer(_Base):
 
         vagas = armazenamento.carregar(self._caminho)
         if req.HasField("status"):
-            nome = pb.Status.Name(req.status)[len("STATUS_"):].lower()
+            nome = status_do_proto(req.status)
             vagas = [v for v in vagas if v["status"] == nome]
         if req.anonimo:
             vagas = relatorio.anonimizar(vagas)
@@ -90,10 +93,8 @@ class VagasServicer(_Base):
         return vaga_para_proto(vaga, detalhe=True)
 
     def AtualizarStatus(self, req, context):
-        from .v1 import vagas_pb2 as pb
-
         grpc = _grpc()
-        novo = pb.Status.Name(req.novo_status)[len("STATUS_"):].lower()
+        novo = status_do_proto(req.novo_status)
         with self._trava:
             vagas = armazenamento.carregar(self._caminho)
             try:
