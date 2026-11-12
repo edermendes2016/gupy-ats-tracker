@@ -69,7 +69,7 @@ describe("App", () => {
     expect(screen.getByText("Kubernetes")).toBeTruthy();
   });
 
-  it("mostra Compartilhar só no modo anônimo", async () => {
+  it("mostra Compartilhar na aba Métricas, desabilitado fora do modo anônimo", async () => {
     vi.stubGlobal("fetch", vi.fn(async (url: string) => {
       const corpo = url.includes("/api/metricas") ? METRICAS : [VAGA];
       return new Response(JSON.stringify(corpo), { status: 200, headers: { "content-type": "application/json" } });
@@ -77,9 +77,21 @@ describe("App", () => {
     renderizar();
     await userEvent.click(screen.getByRole("tab", { name: "Métricas" }));
     await screen.findByText("vagas analisadas");
-    expect(screen.queryByRole("heading", { name: "Compartilhar" })).toBeNull();
+    expect(screen.getByRole("heading", { name: "Compartilhar" })).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Gerar imagem" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText(/ative o modo anônimo/i)).toBeTruthy();
+  });
+
+  it("habilita Compartilhar quando o modo anônimo está marcado", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      const corpo = url.includes("/api/metricas") ? METRICAS : [VAGA];
+      return new Response(JSON.stringify(corpo), { status: 200, headers: { "content-type": "application/json" } });
+    }));
+    renderizar();
+    await userEvent.click(screen.getByRole("tab", { name: "Métricas" }));
+    await screen.findByText("vagas analisadas");
     await userEvent.click(screen.getByLabelText(/modo anônimo/i));
-    expect(await screen.findByRole("heading", { name: "Compartilhar" })).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Gerar imagem" }) as HTMLButtonElement).disabled).toBe(false);
   });
 });
 
