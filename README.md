@@ -27,9 +27,26 @@ cd gupy-ats-tracker
 python -m gupy_tracker ranking
 ```
 
+## Interface web (opcional)
+
+Para quem prefere uma tela. São três processos, todos locais (`127.0.0.1`):
+
+```bash
+pip install .[grpc]                                   # grpcio e protobuf
+sh scripts/gerar_proto.sh                             # gera gupy_tracker/v1/
+python -m gupy_tracker.servidor_grpc --dados private/vagas.json   # terminal 1: gRPC na porta 50051
+
+cd server && npm install && npm start                 # terminal 2: BFF em http://127.0.0.1:3000
+
+cd web && npm install && npm run dev                  # terminal 3: interface em http://127.0.0.1:5173
+```
+
+Arquitetura e decisões: [plano da interface](docs/plano-interface.md). Detalhes do servidor: [servidor gRPC](docs/servidor-grpc.md).
+
 ## Documentação
 
 - [Como usar](docs/como-usar.md): passo a passo, do download ao primeiro ranking
 - [Comandos](docs/comandos.md): referência de comandos, opções e status
 - [Metodologia do Match Score](docs/match-score.md): os cinco critérios, pesos e faixas
 - [Proteção de dados](docs/protecao-de-dados.md): como nada sensível vai para o Git
+- [Wiki da parte Python](docs/wiki-python/README.md): estudo do código e padrões de projeto
