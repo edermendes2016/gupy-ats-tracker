@@ -180,3 +180,69 @@ def exportar(caminho: Path, vagas: list[dict]) -> tuple[int, int]:
                 z.writestr(infos[nome] if nome in infos else nome, dados)
         tmp.replace(caminho)
     return adicionadas, ja_existiam
+
+
+CABECALHO = ["Data de Inscrição", "Empresa", "Cargo", "Status", "Palavras-Chave da Vaga", "Lacuna", "Fonte", "Link da vaga"]
+
+
+def gerar_modelo(caminho: Path) -> None:
+    """Cria uma planilha de controle nova, vazia, com o mesmo layout de colunas do modelo.
+
+    Não usa a planilha de ninguém: só o layout (título, cabeçalho e colunas A a H).
+    Formatação visual (cores, bordas) não é copiada; ela vem do modelo original.
+    """
+    from xml.sax.saxutils import escape as _esc
+    if caminho.exists():
+        raise FileExistsError(f"já existe um arquivo em {caminho}")
+    def linha(n: int, valores: list[str]) -> str:
+        celulas = "".join(
+            f'<c r="{COLUNAS[i]}{n}" t="inlineStr"><is><t xml:space="preserve">{_esc(v)}</t></is></c>'
+            for i, v in enumerate(valores) if v
+        )
+        return f'<row r="{n}">{celulas}</row>'
+    aba = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+        '<dimension ref="A1:H2"/><cols>'
+        + "".join(f'<col min="{i}" max="{i}" width="22" customWidth="1"/>' for i in range(1, 9))
+        + "</cols><sheetData>"
+        + linha(1, ["Controle de candidaturas Gupy"])
+        + linha(2, CABECALHO)
+        + "</sheetData></worksheet>"
+    )
+    partes = {
+        "[Content_Types].xml": (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+            '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+            '<Default Extension="xml" ContentType="application/xml"/>'
+            '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+            '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+            "</Types>"
+        ),
+        "_rels/.rels": (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+            "</Relationships>"
+        ),
+        "xl/workbook.xml": (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+            'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+            '<sheets><sheet name="Controle" sheetId="1" r:id="rId1"/></sheets></workbook>'
+        ),
+        "xl/_rels/workbook.xml.rels": (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+            "</Relationships>"
+        ),
+        ABA: aba,
+    }
+    caminho.parent.mkdir(parents=True, exist_ok=True)
+    tmp = caminho.with_suffix(caminho.suffix + ".tmp")
+    with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
+        for nome, conteudo in partes.items():
+            z.writestr(nome, conteudo)
+    tmp.replace(caminho)

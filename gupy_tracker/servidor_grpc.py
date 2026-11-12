@@ -157,6 +157,18 @@ class PlanilhaServicer(_Base):
             context.abort(grpc.StatusCode.FAILED_PRECONDITION, f"não foi possível atualizar a planilha: {e}")
         return ppb.ExportarPlanilhaResponse(novas=novas, existentes=existentes)
 
+    def GerarModelo(self, req, context):
+        from .v1 import planilha_pb2 as ppb
+
+        grpc = _grpc()
+        try:
+            planilha.gerar_modelo(Path(req.caminho))
+        except FileExistsError as e:
+            context.abort(grpc.StatusCode.ALREADY_EXISTS, str(e))
+        except (OSError, ValueError) as e:
+            context.abort(grpc.StatusCode.FAILED_PRECONDITION, f"não foi possível criar a planilha: {e}")
+        return ppb.GerarModeloResponse()
+
 
 class AnaliseServicer(_Base):
     """Implementa gupy_tracker.v1.AnaliseService. Não grava nada: só calcula."""

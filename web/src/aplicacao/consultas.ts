@@ -42,6 +42,14 @@ export function useExcluirVaga() {
   });
 }
 
+export function useEscolherPlanilha() {
+  return useMutation({ mutationFn: api.escolherPlanilha });
+}
+
+export function useGerarPlanilha() {
+  return useMutation({ mutationFn: api.gerarPlanilha });
+}
+
 export function useAnalisarCurriculo() {
   return useMutation({ mutationFn: api.analisarCurriculo });
 }

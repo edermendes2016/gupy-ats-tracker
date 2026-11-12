@@ -137,6 +137,9 @@ export function criarRepositoriosGrpc(endereco: string): Repositorios {
       const res = await chamar<{ novas: number; existentes: number }>(planilhaCli, "Exportar", { caminho });
       return { novas: Number(res.novas), existentes: Number(res.existentes) };
     },
+    async gerarModelo(caminho) {
+      await chamar(planilhaCli, "GerarModelo", { caminho });
+    },
   };
 
   const analise: AnaliseRepositorio = {

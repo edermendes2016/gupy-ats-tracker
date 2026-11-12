@@ -46,4 +46,5 @@ export interface AnaliseRepositorio {
 
 export interface PlanilhaRepositorio {
   exportar(caminho: string): Promise<{ novas: number; existentes: number }>;
+  gerarModelo(caminho: string): Promise<void>;
 }

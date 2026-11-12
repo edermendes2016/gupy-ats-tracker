@@ -3,6 +3,7 @@
 import { criarCasosDeUso } from "./aplicacao/casos.js";
 import { criarRepositoriosGrpc } from "./infraestrutura/grpc/clientes.js";
 import { criarApp } from "./apresentacao/http/app.js";
+import { escolherXlsxWindows } from "./infraestrutura/seletor.js";
 
 const HOST = process.env.HOST ?? "127.0.0.1";
 const PORT = Number(process.env.PORT ?? 3000);
@@ -15,7 +16,10 @@ const casos = criarCasosDeUso({
   planilha: repos.planilha,
   analise: repos.analise,
 });
-const app = criarApp(casos, { logger: true });
+const app = criarApp(casos, {
+  logger: true,
+  escolherArquivo: process.platform === "win32" ? escolherXlsxWindows : undefined,
+});
 
 app.listen({ host: HOST, port: PORT }).catch((erro) => {
   app.log.error(erro);

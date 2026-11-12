@@ -191,6 +191,19 @@ class PlanilhaDeControle(unittest.TestCase):
                 self.assertIn(f"<t xml:space=\"preserve\">{texto}</t>", xml)
             self.assertEqual(xml.count("<t xml:space=\"preserve\">Alfa</t>"), 1)
 
+    def test_gerar_modelo_cria_planilha_que_aceita_exportacao(self):
+        from gupy_tracker import planilha
+        with tempfile.TemporaryDirectory() as d:
+            caminho = Path(d) / "novo" / "controle.xlsx"
+            planilha.gerar_modelo(caminho)
+            v = {**vaga("a", "Alfa", 80), "cargo": "Dev", "data": "2026-03-01", "palavras_chave": ["C#"]}
+            self.assertEqual(planilha.exportar(caminho, [v]), (1, 0))
+            xml = self._xml(caminho)
+            for texto in ("Data de Inscrição", "Link da vaga", "Alfa", "C#"):
+                self.assertIn(texto, xml)
+            with self.assertRaises(FileExistsError):
+                planilha.gerar_modelo(caminho)
+
     def test_escapa_caracteres_especiais(self):
         from gupy_tracker import planilha
         with tempfile.TemporaryDirectory() as d:
