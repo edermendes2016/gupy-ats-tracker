@@ -24,6 +24,15 @@ class DockerTest(unittest.TestCase):
         self.assertIn("/app/planilhas", compose)
         self.assertIn("127.0.0.1:3000:3000", compose)
 
+    def test_scripts_do_docker_tem_fim_de_linha_lf(self):
+        atributos = (RAIZ / ".gitattributes").read_text(encoding="utf-8")
+        self.assertIn("*.sh text eol=lf", atributos)
+        self.assertIn("Dockerfile text eol=lf", atributos)
+        self.assertNotIn(b"\r\n", (RAIZ / "docker" / "entrypoint.sh").read_bytes())
+
+    def test_imagem_remove_cr_do_entrypoint(self):
+        self.assertIn("sed -i 's/\\r$//' /usr/local/bin/entrypoint.sh", (RAIZ / "Dockerfile").read_text(encoding="utf-8"))
+
     def test_proto_e_gerado_no_build(self):
         dockerfile = (RAIZ / "Dockerfile").read_text(encoding="utf-8")
         self.assertIn("python scripts/gerar_proto.py", dockerfile)

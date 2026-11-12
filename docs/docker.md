@@ -49,6 +49,14 @@ O `.dockerignore` nega tudo por padrão e só libera o código. `private/`, `dat
 
 ## Problemas comuns
 
+- **`exec /usr/local/bin/entrypoint.sh: no such file or directory` e o contêiner reinicia em loop**: o arquivo foi clonado com fim de linha do Windows (CRLF). O `.gitattributes` do projeto já fixa LF, e a imagem também remove o `\r`. Se a cópia local é antiga, atualize e reconstrua sem cache:
+
+  ```
+  git pull
+  docker compose build --no-cache
+  docker compose up
+  ```
+
 - **Erro de volume no Windows**: confira em Docker Desktop, *Settings → Resources → File sharing*, se a pasta do projeto (e a da planilha) estão liberadas.
 - **Leitura de PDF**: a imagem já inclui o `pdftotext` (poppler).
 - **Recriar do zero**: `docker compose build --no-cache`.
