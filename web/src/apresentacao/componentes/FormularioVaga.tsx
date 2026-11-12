@@ -2,10 +2,19 @@ import { useState, type FormEvent } from "react";
 import { useAnalisarCurriculo, useRegistrarVaga } from "../../aplicacao/consultas";
 import {
   CRITERIOS, MODELOS, ROTULO_MODELO, ROTULO_SENIORIDADE, SENIORIDADES,
-  type Criterios, type Modelo, type NovaVaga, type ResultadoAnalise, type Senioridade,
+  type Criterios, type Modelo, type NomeCriterio, type NovaVaga, type ResultadoAnalise, type Senioridade,
 } from "../../dominio/tipos";
 
 const CRITERIOS_INICIAIS: Criterios = { obrigatorios: 0, desejaveis: 0, experiencia: 0, dominio: 0, logistica: 0 };
+
+// Orientação para cada critério, para saber o que colocar (0 = nada, 100 = tudo).
+const DICAS_CRITERIOS: Record<NomeCriterio, string> = {
+  obrigatorios: "Quanto dos requisitos obrigatórios você cobre. 100 = tem todos; 50 = tem metade.",
+  desejaveis: "Quanto dos diferenciais você cobre. Se a vaga não lista nenhum, use 50.",
+  experiencia: "Tempo pedido x seu tempo na área. 100 = atende ou supera; abaixo disso, reduza na proporção.",
+  dominio: "Afinidade com o setor e o tipo de problema (ex.: setor público, sistemas críticos). 100 = mesma área.",
+  logistica: "Modelo (remoto, híbrido, presencial), local, idioma e salário. 100 = tudo compatível; 0 = incompatível.",
+};
 const EXTENSOES = ".pdf,.docx,.txt,.md";
 
 /** Lê o arquivo como base64 (sem o prefixo data:). */
@@ -130,8 +139,11 @@ export function FormularioVaga({ aoCriar }: { aoCriar: () => void }) {
         {CRITERIOS.map((c) => (
           <label key={c.nome}>
             {c.rotulo} <small>({c.peso}%)</small>
+            <small id={`dica-${c.nome}`} style={{ display: "block", color: "#555", fontWeight: "normal" }}>
+              {DICAS_CRITERIOS[c.nome]}
+            </small>
             <input
-              type="number" min={0} max={100} step={1} required
+              type="number" min={0} max={100} step={1} required aria-describedby={`dica-${c.nome}`}
               value={criterios[c.nome]}
               onChange={(e) => setCriterios({ ...criterios, [c.nome]: Number(e.target.value) })}
             />
