@@ -38,7 +38,8 @@ COPY server/ ./server/
 COPY --from=bff /app/server/node_modules ./server/node_modules
 COPY --from=web /app/web/dist ./web/dist
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+# Remove CR (CRLF de checkout no Windows) e garante permissão de execução.
+RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh && chmod +x /usr/local/bin/entrypoint.sh
 
 # Dados e planilhas são montados por volume (ver docker-compose.yml).
 RUN mkdir -p /app/private /app/planilhas

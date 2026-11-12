@@ -1,0 +1,7 @@
+# Estes arquivos são lidos pelo Linux dentro do Docker: precisam de fim de linha LF,
+# mesmo quando o Git do Windows faz o checkout com CRLF.
+*.sh text eol=lf
+Dockerfile text eol=lf
+.dockerignore text eol=lf
+docker-compose.yml text eol=lf
+docker/** text eol=lf
