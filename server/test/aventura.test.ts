@@ -17,22 +17,26 @@ const base = (over: Partial<Vaga> = {}): Vaga => ({
 
 describe("XP por tempo", () => {
   it("cresce com os dias parados numa etapa que rende", () => {
-    // 5 dias em candidatada (2 XP/dia) = 10 XP
-    expect(xpPorTempo([{ data: "2026-01-01", status: "candidatada" }], "2026-01-06")).toBe(10);
+    // 01 a 06 de janeiro, contando o dia de hoje: 6 dias em candidatada (2 XP/dia) = 12 XP
+    expect(xpPorTempo([{ data: "2026-01-01", status: "candidatada" }], "2026-01-06")).toBe(12);
   });
 
   it("não rende nada para descartada, recusada ou desistência", () => {
-    for (const status of ["descartada", "recusada", "desistencia", "analisada"] as const) {
+    for (const status of ["descartada", "recusada", "desistencia"] as const) {
       expect(xpPorTempo([{ data: "2026-01-01", status }], "2026-02-01")).toBe(0);
     }
   });
 
-  it("fecha cada etapa na data da próxima mudança", () => {
+  it("fecha cada etapa na data da próxima mudança e conta o dia de hoje na atual", () => {
     const historico = [
       { data: "2026-01-01", status: "candidatada" as const }, // 4 dias x 2 = 8
-      { data: "2026-01-05", status: "entrevista" as const }, // 3 dias x 5 = 15
+      { data: "2026-01-05", status: "entrevista" as const }, // 01 a 08, 4 dias x 5 = 20
     ];
-    expect(xpPorTempo(historico, "2026-01-08")).toBe(23);
+    expect(xpPorTempo(historico, "2026-01-08")).toBe(28);
+  });
+
+  it("analisada rende 1 XP por dia", () => {
+    expect(xpPorTempo([{ data: "2026-11-12", status: "analisada" }], "2026-11-12")).toBe(1);
   });
 
   it("aplica o teto de dias por etapa", () => {
@@ -77,10 +81,20 @@ describe("montarAventura", () => {
   it("soma o XP das vagas e lista por vaga, em ordem", () => {
     const vagas = [base(), base({ id: "v2", empresa: "Beta", historico: [{ data: "2026-01-10", status: "triagem" }] })];
     const a = montarAventura(vagas, { v2: { atual: 1, total: 4 } }, hoje);
-    // v2: 1 etapa de 4 (18 XP) + 1 dia em triagem (3 XP) = 21; v1: 10 dias em candidatada = 20.
+    // v2: 1 etapa de 4 (18 XP) + 2 dias em triagem (6 XP) = 24; v1: 11 dias em candidatada = 22.
     expect(a.vagas.map((v) => v.id)).toEqual(["v2", "v1"]);
-    expect(a.vagas[0]?.xp).toBe(21);
+    expect(a.vagas[0]?.xp).toBe(24);
     expect(a.xp).toBe(a.vagas.reduce((s, v) => s + v.xp, 0));
+  });
+
+  it("vaga sem histórico conta desde a data de cadastro", () => {
+    const a = montarAventura([base({ historico: [], status: "analisada", data: "2026-11-10" })], {}, "2026-11-12");
+    expect(a.vagas[0]?.xp).toBe(3); // 10, 11 e 12 de novembro, 1 XP por dia
+  });
+
+  it("lista todas as vagas, mesmo as que ainda não renderam", () => {
+    const a = montarAventura([base({ id: "x", status: "descartada", historico: [] })], {}, "2026-11-12");
+    expect(a.vagas.map((v) => v.id)).toEqual(["x"]);
   });
 
   it("em modo anônimo não expõe a lista de vagas", () => {

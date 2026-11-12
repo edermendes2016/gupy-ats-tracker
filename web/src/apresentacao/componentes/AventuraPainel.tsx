@@ -1,7 +1,11 @@
-// Aba Aventura: o personagem desempregado sobe de nível com o tempo em cada etapa
-// e com as etapas concluídas. Só mostra XP; a lista por vaga some no modo anônimo.
+// Aba Aventura: o personagem sobe de nível sozinho, a partir das vagas cadastradas.
+// Não precisa digitar nada: o XP vem do status e das datas da aba Vagas.
+// O formulário de etapa à mão fica escondido em "Opções avançadas".
+// No modo anônimo, a lista por vaga não aparece.
 import { useState, type FormEvent } from "react";
 import { useAventura, useRegistrarProgresso } from "../../aplicacao/consultas";
+
+const pct = (parte: number, todo: number) => (todo > 0 ? Math.min(100, Math.round((100 * parte) / todo)) : 0);
 
 export function AventuraPainel({ anonimo }: { anonimo: boolean }) {
   const aventura = useAventura(anonimo);
@@ -27,19 +31,24 @@ export function AventuraPainel({ anonimo }: { anonimo: boolean }) {
   if (aventura.isPending) return <p>Carregando…</p>;
   if (aventura.isError) return <p role="alert" className="erro">{aventura.error.message}</p>;
   const a = aventura.data;
-  const faixa = a.xpProximoNivel - a.xpNivelAtual;
-  const andamento = faixa ? Math.round((100 * (a.xp - a.xpNivelAtual)) / faixa) : 0;
+  const andamento = pct(a.xp - a.xpNivelAtual, a.xpProximoNivel - a.xpNivelAtual);
+  const maiorXp = Math.max(1, ...a.vagas.map((v) => v.xp));
 
   return (
-    <section aria-label="Aventura">
+    <section aria-label="Aventura" className="aventura">
       <p className="ajuda">
-        Seu personagem sobe de nível enquanto espera cada etapa da Gupy. Quanto mais tempo numa etapa
-        que rende XP, e quanto mais etapas concluídas, mais XP. Não há ranking.
+        Seu personagem sobe de nível enquanto as vagas esperam resposta. O XP vem do status e das datas
+        da aba Vagas: quanto mais tempo numa etapa que rende, mais XP. Não há ranking.
       </p>
 
-      <div className="aventura-personagem">
-        <p className="aventura-nivel">Nível {a.nivel}</p>
-        <p className="aventura-titulo">{a.titulo}</p>
+      <div className="aventura-cartao">
+        <div className="aventura-cabeca">
+          <span className="aventura-selo" aria-label={`Nível ${a.nivel}`}>{a.nivel}</span>
+          <div>
+            <p className="aventura-rotulo">Nível {a.nivel}</p>
+            <p className="aventura-titulo">{a.titulo}</p>
+          </div>
+        </div>
         <div
           className="barra-xp"
           role="progressbar"
@@ -50,34 +59,59 @@ export function AventuraPainel({ anonimo }: { anonimo: boolean }) {
         >
           <span style={{ width: `${andamento}%` }} />
         </div>
-        <p className="ajuda">{a.xp} XP (próximo nível em {a.xpProximoNivel} XP)</p>
+        <p className="aventura-xp">
+          <strong>{a.xp}</strong> XP · próximo nível em {a.xpProximoNivel} XP
+        </p>
       </div>
 
       {!anonimo && (
         <>
           <h3>XP por vaga</h3>
           {a.vagas.length === 0 ? (
-            <p className="ajuda">Nenhuma vaga rendeu XP ainda.</p>
+            <p className="ajuda">Cadastre vagas na aba Vagas para o personagem começar a subir.</p>
           ) : (
             <ul className="aventura-vagas">
               {a.vagas.map((v) => (
                 <li key={v.id}>
-                  <span>{v.empresa} · {v.cargo}</span> <strong>{v.xp} XP</strong>
+                  <div className="aventura-vaga-texto">
+                    <span className="aventura-vaga-nome">{v.empresa}</span>
+                    <span className="ajuda">{v.cargo}</span>
+                  </div>
+                  <div className="barra-xp fina" aria-hidden="true">
+                    <span style={{ width: `${pct(v.xp, maiorXp)}%` }} />
+                  </div>
+                  <strong className="aventura-vaga-xp">{v.xp} XP</strong>
                 </li>
               ))}
             </ul>
           )}
 
-          <h3>Registrar etapa à mão</h3>
-          <p className="ajuda">Alternativa à extensão. Use o nome exato da empresa e do cargo cadastrados.</p>
-          <form onSubmit={enviar} className="formulario-progresso">
-            <label>Empresa<input value={empresa} onChange={(e) => setEmpresa(e.target.value)} required /></label>
-            <label>Cargo<input value={cargo} onChange={(e) => setCargo(e.target.value)} required /></label>
-            <label>Etapas concluídas<input type="number" min={0} value={atual} onChange={(e) => setAtual(e.target.value)} required /></label>
-            <label>Total de etapas<input type="number" min={1} value={total} onChange={(e) => setTotal(e.target.value)} required /></label>
-            <button type="submit" disabled={registrar.isPending}>Salvar progresso</button>
-          </form>
-          {aviso && <p role="status" className="ajuda">{aviso}</p>}
+          <details className="avancado">
+            <summary>Opções avançadas: registrar etapa à mão</summary>
+            <p className="ajuda">
+              Use só se não quiser usar a extensão. Informe o nome exato da empresa e do cargo cadastrados.
+            </p>
+            <form onSubmit={enviar} className="formulario-progresso">
+              <label>
+                Empresa
+                <input value={empresa} onChange={(e) => setEmpresa(e.target.value)} required />
+              </label>
+              <label>
+                Cargo
+                <input value={cargo} onChange={(e) => setCargo(e.target.value)} required />
+              </label>
+              <label>
+                Etapas concluídas
+                <input type="number" min={0} value={atual} onChange={(e) => setAtual(e.target.value)} required />
+              </label>
+              <label>
+                Total de etapas
+                <input type="number" min={1} value={total} onChange={(e) => setTotal(e.target.value)} required />
+              </label>
+              <button type="submit" disabled={registrar.isPending}>Salvar progresso</button>
+            </form>
+            {aviso && <p role="status" className="ajuda">{aviso}</p>}
+          </details>
         </>
       )}
     </section>

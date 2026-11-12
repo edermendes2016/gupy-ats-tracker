@@ -125,4 +125,41 @@ button:disabled { opacity: 0.6; cursor: default; }
   .barras li { grid-template-columns: minmax(0, 1fr) 3ch; }
   .barra-trilho { grid-column: 1 / -1; grid-row: 2; }
   .barra-numero { grid-row: 1; grid-column: 2; }
+/* Aba Aventura */
+.aventura .aventura-cartao {
+  background: #fff; border: 1px solid #e3e6ee; border-radius: 14px; padding: 20px; margin: 12px 0 20px;
+}
+.aventura-cabeca { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+.aventura-selo {
+  display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(135deg, #3f51b5, #7e57c2); color: #fff; font-size: 28px; font-weight: 700;
+  box-shadow: 0 4px 14px rgba(63, 81, 181, 0.35);
+}
+.aventura-rotulo { margin: 0; color: #5b6275; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; }
+.aventura-titulo { margin: 2px 0 0; font-size: 20px; font-weight: 700; }
+.barra-xp {
+  height: 16px; border-radius: 999px; background: #e7eaf3; overflow: hidden;
+}
+.barra-xp span {
+  display: block; height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, #3f51b5, #7e57c2); transition: width 0.4s ease;
+}
+.barra-xp.fina { height: 8px; flex: 1; }
+.aventura-xp { margin: 10px 0 0; color: #3d4356; }
+.aventura-vagas { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.aventura-vagas li { display: grid; grid-template-columns: minmax(160px, 1fr) 2fr auto; gap: 12px; align-items: center; }
+.aventura-vaga-texto { display: flex; flex-direction: column; }
+.aventura-vaga-nome { font-weight: 600; }
+.aventura-vaga-xp { min-width: 72px; text-align: right; }
+.avancado { margin-top: 24px; }
+.avancado summary { cursor: pointer; color: #3f51b5; }
+.formulario-progresso {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 12px; align-items: end;
+}
+.formulario-progresso label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.formulario-progresso input { padding: 8px; border: 1px solid #c9ced9; border-radius: 8px; }
+.formulario-progresso button { padding: 9px 14px; border-radius: 8px; }
+@media (max-width: 600px) {
+  .aventura-vagas li { grid-template-columns: 1fr; }
+  .aventura-vaga-xp { text-align: left; }
 }
