@@ -6,7 +6,7 @@ from gupy_tracker.validacao_curriculo import CurriculoNaoReconhecido, _sinais, v
 
 HOJE = date(2026, 11, 12)
 
-VAGA_3CON = """Desenvolvedor Backend .Net Core
+VAGA_EXEMPLO = """Desenvolvedor Backend .Net Core
 Publicada em 11 de novembro de 2026
 Inscrições abertas até 10 de janeiro de 2027
 Descrição da vaga
@@ -19,7 +19,7 @@ C# avançado, orientação a objetos, SOLID e injeção de dependência.
 Etapas do processo
 Etapa 1: Cadastro
 Etapa 2: Entrevista R&S
-Candidate-se hoje mesmo às nossas vagas e faça parte do time 3CON!
+Candidate-se hoje mesmo às nossas vagas e faça parte do time Empresa Exemplo!
 """
 
 ROTEIRO = """Modelo de Roteiro para atividade experimental – PIBID
@@ -62,7 +62,7 @@ class Recusa(unittest.TestCase):
 
     def test_vaga_colada_no_lugar_do_curriculo_e_recusada(self):
         with self.assertRaises(CurriculoNaoReconhecido):
-            verificar(VAGA_3CON)
+            verificar(VAGA_EXEMPLO)
 
     def test_analisar_recusa_antes_de_calcular_score(self):
         with self.assertRaises(ValueError):

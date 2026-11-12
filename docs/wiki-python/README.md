@@ -1,6 +1,6 @@
 # Wiki: parte Python do tracker
 
-Material de estudo sobre a biblioteca `gupy_tracker/`. O código é pequeno de propósito: cada arquivo tem uma responsabilidade, e os padrões abaixo aparecem de forma concreta.
+Guia de leitura da biblioteca `gupy_tracker/`. O código é pequeno de propósito: cada arquivo tem uma responsabilidade, e os padrões abaixo aparecem de forma concreta.
 
 ## Mapa do código
 
@@ -27,9 +27,9 @@ Veja [padroes.md](padroes.md) para a explicação de cada um, com links para o c
 - **Adapter**: `conversao_proto.py` traduz o dicionário da vaga para a mensagem Protobuf.
 - **Composition root**: `cli.py` e `servidor_grpc.py` são os únicos lugares que montam as dependências.
 
-## Como estudar
+## Por onde começar a ler
 
 1. Leia `modelo.py` inteiro: é o domínio, sem entrada/saída e fácil de testar.
-2. Leia `casos_de_uso.py` e compare com a `cli.py` antiga (histórico do git, PR #4).
+2. Leia `casos_de_uso.py` e depois a `cli.py`, que o usa.
 3. Rode `python -m unittest discover -s tests -v` e veja quais testes cobrem cada regra.
 4. Depois, veja o servidor gRPC em [servidor-grpc.md](../servidor-grpc.md).

@@ -216,7 +216,7 @@ class PlanilhaDeControle(unittest.TestCase):
 class PlanilhaJaPreenchida(unittest.TestCase):
     """Regressão: planilha salva pelo Excel (textos em sharedStrings, datas com estilo) não duplica linhas."""
 
-    SST = ["3CON", "Desenvolvedor Backend .Net Core", "desistencia", "Órgão Público"]
+    SST = ["Empresa Exemplo", "Desenvolvedor Backend .Net Core", "desistencia", "Órgão Público"]
 
     def _xlsx_preenchido(self, d):
         from zipfile import ZipFile
@@ -247,21 +247,21 @@ class PlanilhaJaPreenchida(unittest.TestCase):
         from gupy_tracker import planilha
         with tempfile.TemporaryDirectory() as d:
             caminho = self._xlsx_preenchido(d)
-            igual = {**vaga("a", "3CON", 80), "cargo": "Desenvolvedor Backend .NET Core",
+            igual = {**vaga("a", "Empresa Exemplo", 80), "cargo": "Desenvolvedor Backend .NET Core",
                      "data": "2026-11-12", "status": "analisada", "palavras_chave": ["C#"],
-                     "url": "https://trescon.gupy.io/job/1"}
+                     "url": "https://exemplo.gupy.io/job/1"}
             self.assertEqual(planilha.exportar(caminho, [igual]), (0, 1))
             xml = self._xml(caminho)
             self.assertNotIn('<row r="5"', xml)  # nenhuma linha nova para a vaga já digitada
             self.assertIn("<t xml:space=\"preserve\">C#</t>", xml)
-            self.assertIn("https://trescon.gupy.io/job/1", xml)
+            self.assertIn("https://exemplo.gupy.io/job/1", xml)
 
-            nova = {**vaga("b", "Spreader", 90), "cargo": "Dev Full Stack", "data": "2026-11-12",
+            nova = {**vaga("b", "Empresa Teste", 90), "cargo": "Dev Full Stack", "data": "2026-11-12",
                     "palavras_chave": ["C#"]}
             self.assertEqual(planilha.exportar(caminho, [nova]), (1, 0))
             self.assertEqual(planilha.exportar(caminho, [nova]), (0, 1))
             xml = self._xml(caminho)
-            self.assertEqual(xml.count("Spreader"), 1)
+            self.assertEqual(xml.count("Empresa Teste"), 1)
             serial = (date(2026, 11, 12) - date(1899, 12, 30)).days
             self.assertIn(f'<c r="A4" s="10"><v>{serial}</v></c>', xml)
 
