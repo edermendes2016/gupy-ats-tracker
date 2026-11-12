@@ -58,3 +58,14 @@ describe("App", () => {
     expect(screen.getByText("33%")).toBeTruthy();
   });
 });
+
+describe("modo anônimo", () => {
+  it("não oferece detalhe da vaga, porque o id mascarado não existe no serviço", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () =>
+      new Response(JSON.stringify([VAGA]), { status: 200, headers: { "content-type": "application/json" } })));
+    renderizar();
+    await screen.findByRole("table");
+    await userEvent.click(screen.getByLabelText(/modo anônimo/i));
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Acme" })).toBeNull());
+  });
+});

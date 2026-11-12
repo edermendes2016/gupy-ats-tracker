@@ -37,9 +37,14 @@ export function TabelaVagas({ vagas, anonimo, editavel, onSelecionar }: Props) {
                 <span className={`selo selo-${tomDoScore(v.matchScore)}`}>{v.matchScore}%</span>
               </td>
               <td>
-                <button className="link" onClick={() => onSelecionar(v.id)}>
-                  {v.empresa}
-                </button>
+                {anonimo ? (
+                  // O id mascarado não existe no serviço, então não há detalhe para abrir.
+                  v.empresa
+                ) : (
+                  <button className="link" onClick={() => onSelecionar(v.id)}>
+                    {v.empresa}
+                  </button>
+                )}
               </td>
               <td>{v.cargo}</td>
               <td>{formatarData(v.data)}</td>
