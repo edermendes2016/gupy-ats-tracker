@@ -18,13 +18,14 @@ function montar(sobrescrever: Partial<Parameters<typeof criarCasosDeUso>[0]["vag
       obter: vi.fn(async () => VAGA),
       registrar: vi.fn(async () => VAGA),
       atualizarStatus: vi.fn(async () => VAGA),
+      excluir: vi.fn(async () => undefined),
       ...sobrescrever,
     },
     ranking: {
       ranking: vi.fn(async () => [VAGA]),
       metricas: vi.fn(async () => ({ total: 1, enviadas: 0, chegaramEntrevista: 0, taxaConversao: 0 })),
     },
-    planilha: { exportar: vi.fn(async () => ({ novas: 0, existentes: 1 })) },
+    planilha: { exportar: vi.fn(async () => ({ novas: 0, existentes: 1 })), gerarModelo: vi.fn(async () => undefined) },
     analise: { analisar: vi.fn(async () => RESULTADO_ANALISE) },
     hoje: () => "2026-02-03",
   });
@@ -90,6 +91,38 @@ describe("rotas HTTP", () => {
     app = montar();
     expect((await app.inject({ method: "GET", url: "/api/ranking" })).json()).toHaveLength(1);
     expect((await app.inject({ method: "GET", url: "/api/metricas" })).json().total).toBe(1);
+  });
+});
+
+describe("DELETE /api/vagas/:id", () => {
+  it("responde 204 e repassa o modo anônimo à aplicação", async () => {
+    const excluir = vi.fn(async () => undefined);
+    app = montar({ excluir });
+    const r = await app.inject({ method: "DELETE", url: "/api/vagas/empresa-01-2026-04?anonimo=true" });
+    expect(r.statusCode).toBe(204);
+    expect(excluir).toHaveBeenCalledWith("empresa-01-2026-04", true);
+  });
+});
+
+describe("planilha: escolher e gerar", () => {
+  it("sem seletor nativo, responde 501 para a interface pedir o caminho digitado", async () => {
+    app = montar();
+    const r = await app.inject({ method: "POST", url: "/api/planilha/escolher" });
+    expect(r.statusCode).toBe(501);
+  });
+
+  it("gera o modelo no caminho informado e devolve o caminho", async () => {
+    const gerarPlanilha = vi.fn(async () => undefined);
+    const casos = criarCasosDeUso({
+      vagas: { listar: vi.fn(), obter: vi.fn(), registrar: vi.fn(), atualizarStatus: vi.fn(), excluir: vi.fn() },
+      ranking: { ranking: vi.fn(), metricas: vi.fn() },
+      planilha: { exportar: vi.fn(), gerarModelo: gerarPlanilha },
+      analise: { analisar: vi.fn() },
+    });
+    app = criarApp(casos);
+    const r = await app.inject({ method: "POST", url: "/api/planilha/gerar", payload: { caminho: "controle.xlsx" } });
+    expect(r.statusCode).toBe(201);
+    expect(gerarPlanilha).toHaveBeenCalledWith("controle.xlsx");
   });
 });
 

@@ -92,9 +92,17 @@ message AtualizarStatusRequest {
   string data = 3;             // ISO 8601; vazio = hoje, no serviço
 }
 
+message ExcluirVagaRequest {
+  string id = 1;               // no modo anônimo, o id mascarado da listagem anônima
+  bool anonimo = 2;
+}
+
+message ExcluirVagaResponse {}
+
 service VagasService {
   rpc ListarVagas(ListarVagasRequest) returns (ListarVagasResponse);
   rpc ObterVaga(ObterVagaRequest) returns (Vaga);
   rpc RegistrarVaga(RegistrarVagaRequest) returns (Vaga);
   rpc AtualizarStatus(AtualizarStatusRequest) returns (Vaga);
+  rpc ExcluirVaga(ExcluirVagaRequest) returns (ExcluirVagaResponse);
 }

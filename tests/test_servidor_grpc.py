@@ -150,3 +150,31 @@ class AnaliseGrpcTest(unittest.TestCase):
                 self.assertEqual(erro.exception.code(), grpc.StatusCode.INVALID_ARGUMENT)
             finally:
                 servidor.stop(0)
+
+
+CRIT_TESTE = {"obrigatorios": 80, "desejaveis": 50, "experiencia": 70, "dominio": 60, "logistica": 90}
+
+
+@unittest.skipUnless(DISPONIVEL, MOTIVO)
+class ExcluirGrpcTest(unittest.TestCase):
+    def test_excluir_no_modo_anonimo_e_recusa_id_inexistente(self):
+        from gupy_tracker import relatorio
+        with tempfile.TemporaryDirectory() as tmp:
+            caminho = Path(tmp) / "vagas.json"
+            servidor, porta = servidor_grpc.criar_servidor(caminho, "127.0.0.1:0")
+            servidor.start()
+            try:
+                stub = vagas_pb2_grpc.VagasServiceStub(grpc.insecure_channel(f"127.0.0.1:{porta}"))
+                from gupy_tracker import casos_de_uso as cu
+                armazenamento.salvar(caminho, [])
+                vagas = armazenamento.carregar(caminho)
+                cu.registrar_vaga(vagas, data="2026-04-01", empresa="Acme Ltda", cargo="Dev", criterios=CRIT_TESTE)
+                armazenamento.salvar(caminho, vagas)
+                mascarado = relatorio.anonimizar(vagas)[0]["id"]
+                stub.ExcluirVaga(vagas_pb2.ExcluirVagaRequest(id=mascarado, anonimo=True))
+                self.assertEqual(armazenamento.carregar(caminho), [])
+                with self.assertRaises(grpc.RpcError) as erro:
+                    stub.ExcluirVaga(vagas_pb2.ExcluirVagaRequest(id="nao-existe", anonimo=True))
+                self.assertEqual(erro.exception.code(), grpc.StatusCode.NOT_FOUND)
+            finally:
+                servidor.stop(0)

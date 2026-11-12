@@ -105,6 +105,20 @@ class VagasServicer(_Base):
         return vaga_para_proto(vaga, detalhe=True)
 
 
+    def ExcluirVaga(self, req, context):
+        from .v1 import vagas_pb2 as pb
+
+        grpc = _grpc()
+        with self._trava:
+            vagas = armazenamento.carregar(self._caminho)
+            try:
+                casos_de_uso.excluir_vaga(vagas, req.id, anonimo=req.anonimo)
+            except casos_de_uso.VagaNaoEncontrada as e:
+                context.abort(grpc.StatusCode.NOT_FOUND, str(e))
+            armazenamento.salvar(self._caminho, vagas)
+        return pb.ExcluirVagaResponse()
+
+
 class RankingServicer(_Base):
     """Implementa gupy_tracker.v1.RankingService."""
 
@@ -142,6 +156,18 @@ class PlanilhaServicer(_Base):
         except (OSError, ValueError) as e:
             context.abort(grpc.StatusCode.FAILED_PRECONDITION, f"não foi possível atualizar a planilha: {e}")
         return ppb.ExportarPlanilhaResponse(novas=novas, existentes=existentes)
+
+    def GerarModelo(self, req, context):
+        from .v1 import planilha_pb2 as ppb
+
+        grpc = _grpc()
+        try:
+            planilha.gerar_modelo(Path(req.caminho))
+        except FileExistsError as e:
+            context.abort(grpc.StatusCode.ALREADY_EXISTS, str(e))
+        except (OSError, ValueError) as e:
+            context.abort(grpc.StatusCode.FAILED_PRECONDITION, f"não foi possível criar a planilha: {e}")
+        return ppb.GerarModeloResponse()
 
 
 class AnaliseServicer(_Base):
