@@ -62,3 +62,6 @@ gupy_tracker/v1/*_pb2_grpc.py
 node_modules/
 dist/
 .vite/
+
+# Imagem de compartilhamento do repositório (não é captura de vaga)
+!docs/social-preview.png

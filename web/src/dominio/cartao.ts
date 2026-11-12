@@ -74,22 +74,27 @@ export interface LinkRede {
   anexaImagem?: boolean;
 }
 
-const LINKEDIN_FEED = "https://www.linkedin.com/feed/?shareActive=true";
+/**
+ * LinkedIn gera um card clicável a partir da URL do repositório (Open Graph). A imagem do
+ * card é a Social Preview do repositório, configurada pelo dono em Settings > General.
+ * Uma imagem anexada ao post nunca é clicável; por isso o card é a opção com link.
+ */
+export const LINKEDIN_CARD = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(REPOSITORIO_URL)}`;
 
 /**
  * Links de compartilhamento para as principais redes. Recebem só o texto do cartão e a
- * URL pública da página (sem query nem hash). LinkedIn abre sempre o feed com a caixa de
- * publicação (shareActive), onde a imagem é anexada pelo ícone de mídia. Facebook só aparece
- * com URL pública, porque só compartilha um link. E-mail não recebe imagem, então leva só o texto.
+ * URL pública da página (sem query nem hash). LinkedIn abre o compartilhamento com card
+ * clicável do repositório; a imagem personalizada continua disponível por Copiar imagem.
+ * Facebook só aparece com URL pública, porque só compartilha um link. E-mail não recebe
+ * imagem, então leva só o texto.
  */
 export function linksCompartilhamento(texto: string, url: string | null): LinkRede[] {
   const t = encodeURIComponent(texto);
   const links: LinkRede[] = [
     {
       id: "linkedin",
-      nome: "LinkedIn",
-      href: LINKEDIN_FEED,
-      anexaImagem: true,
+      nome: "LinkedIn (post com card clicável)",
+      href: LINKEDIN_CARD,
     },
   ];
   links.push({ id: "x", nome: "X", href: `https://x.com/intent/post?text=${t}`, anexaImagem: true });

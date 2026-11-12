@@ -247,11 +247,10 @@ function CompartilharCartao({ m, anonimo }: { m: Metricas; anonimo: boolean }) {
           </li>
         ))}
       </ul>
-      <ol className="passos-compartilhar">
-        <li>Copie a imagem (ou baixe o PNG) e o texto abaixo.</li>
-        <li>No LinkedIn, abra a caixa de publicação com o botão de rede acima.</li>
-        <li>Cole com Ctrl+V. Se não colar, clique no ícone de imagem e anexe o PNG baixado. Confira antes de publicar.</li>
-      </ol>
+      <div className="opcoes-compartilhar">
+        <p><strong>Post com card clicável:</strong> o botão LinkedIn abre o compartilhamento com o link do repositório. Copie o texto e cole na caixa do LinkedIn; o card com a imagem do projeto aparece sozinho. Só o card é clicável.</p>
+        <p><strong>Post com a sua imagem:</strong> clique em Copiar imagem (ou Baixar PNG), cole com Ctrl+V na caixa de publicação e inclua o link do repositório no texto. Uma imagem anexada não é clicável.</p>
+      </div>
       {aviso && <p role="status" className="ajuda">{aviso}</p>}
       <pre className="texto-cartao">{texto}</pre>
     </section>
