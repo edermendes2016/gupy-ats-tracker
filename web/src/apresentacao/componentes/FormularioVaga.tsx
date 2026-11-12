@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Dica } from "./Dica";
 import { useAnalisarCurriculo, useRegistrarVaga } from "../../aplicacao/consultas";
 import {
   CRITERIOS, MODELOS, ROTULO_MODELO, ROTULO_SENIORIDADE, SENIORIDADES,
@@ -137,17 +138,18 @@ export function FormularioVaga({ aoCriar }: { aoCriar: () => void }) {
       <fieldset>
         <legend>Critérios (0 a 100)</legend>
         {CRITERIOS.map((c) => (
-          <label key={c.nome}>
-            {c.rotulo} <small>({c.peso}%)</small>
-            <small id={`dica-${c.nome}`} style={{ display: "block", color: "#555", fontWeight: "normal" }}>
-              {DICAS_CRITERIOS[c.nome]}
-            </small>
+          <div className="criterio" key={c.nome}>
+            <span className="criterio-rotulo">
+              <label htmlFor={`criterio-${c.nome}`}>{c.rotulo} <small>({c.peso}%)</small></label>
+              <Dica id={`dica-${c.nome}`} rotulo={c.rotulo} texto={DICAS_CRITERIOS[c.nome]} />
+            </span>
             <input
+              id={`criterio-${c.nome}`}
               type="number" min={0} max={100} step={1} required aria-describedby={`dica-${c.nome}`}
               value={criterios[c.nome]}
               onChange={(e) => setCriterios({ ...criterios, [c.nome]: Number(e.target.value) })}
             />
-          </label>
+          </div>
         ))}
       </fieldset>
 

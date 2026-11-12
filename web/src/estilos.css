@@ -68,3 +68,12 @@ button:disabled { opacity: 0.6; cursor: default; }
   .app { padding: 12px; }
   .conteudo { padding: 12px; }
 }
+
+/* Critérios e dicas: o "?" fica ao lado do rótulo, e o texto não empurra os campos. */
+.criterio { display: flex; flex-direction: column; gap: 4px; font-size: 0.92rem; }
+.criterio-rotulo { display: flex; align-items: center; gap: 6px; }
+.criterio-rotulo label { display: inline; }
+.dica { position: relative; display: inline-flex; }
+.dica-botao { width: 1.6em; height: 1.6em; border-radius: 50%; border: 1px solid var(--borda); background: #fff; color: #333; font-size: 0.8rem; line-height: 1; padding: 0; cursor: pointer; }
+.dica-botao:focus-visible { outline: 2px solid #3f51b5; outline-offset: 2px; }
+.dica-texto { position: absolute; z-index: 10; top: calc(100% + 6px); left: -6px; width: 260px; max-width: 80vw; padding: 8px 10px; border: 1px solid var(--borda); border-radius: 8px; background: #fff; color: #222; box-shadow: 0 4px 12px rgba(0,0,0,.15); font-size: 0.85rem; line-height: 1.35; }

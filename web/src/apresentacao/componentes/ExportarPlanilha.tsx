@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useEscolherPlanilha, useExportarPlanilha, useGerarPlanilha } from "../../aplicacao/consultas";
 
 const CHAVE = "gupy-tracker.planilha";
+const DESTINO_SUGERIDO = "private/controle.xlsx";
 
 /** Último caminho usado neste navegador. Só uma conveniência: se falhar, a tela segue sem ele. */
 function caminhoGuardado(): string {
@@ -26,6 +27,8 @@ export function ExportarPlanilha() {
   const gerar = useGerarPlanilha();
   const [caminho, setCaminho] = useState(caminhoGuardado);
   const [digitando, setDigitando] = useState(false);
+  const [gerando, setGerando] = useState(false);
+  const [destinoNovo, setDestinoNovo] = useState(DESTINO_SUGERIDO);
 
   function definir(novo: string) {
     setCaminho(novo);
@@ -42,13 +45,25 @@ export function ExportarPlanilha() {
     });
   }
 
-  function gerarNovo() {
-    const destino = caminho.trim() || "private/controle.xlsx";
-    gerar.mutate(destino, { onSuccess: (r) => definir(r.caminho) });
+  function iniciarGerar() {
+    setGerando(true);
+  }
+
+  function criarNovo() {
+    const destino = destinoNovo.trim();
+    if (!destino) return;
+    // Depois de criar, o caminho escolhido vira a planilha de controle.
+    gerar.mutate(destino, {
+      onSuccess: (r) => {
+        definir(r.caminho);
+        setGerando(false);
+      },
+    });
   }
 
   function enviar(e: FormEvent) {
     e.preventDefault();
+    if (gerando) return criarNovo(); // Enter no campo do novo arquivo cria, não exporta
     exportar.mutate(caminho.trim());
   }
 
@@ -56,7 +71,12 @@ export function ExportarPlanilha() {
 
   return (
     <form className="exportar" onSubmit={enviar}>
-      {temCaminho && !digitando ? (
+      {gerando ? (
+        <label>
+          Salvar a nova planilha em (caminho do .xlsx no computador onde o serviço roda)
+          <input value={destinoNovo} onChange={(e) => setDestinoNovo(e.target.value)} placeholder={DESTINO_SUGERIDO} />
+        </label>
+      ) : temCaminho && !digitando ? (
         <p>
           Planilha de controle: <code>{caminho}</code>{" "}
           <button type="button" className="link" onClick={() => setDigitando(true)}>trocar</button>
@@ -64,11 +84,20 @@ export function ExportarPlanilha() {
       ) : (
         <label>
           Caminho da planilha de controle (.xlsx no computador onde o serviço roda)
-          <input value={caminho} onChange={(e) => setCaminho(e.target.value)} placeholder="private/controle.xlsx" />
+          <input value={caminho} onChange={(e) => setCaminho(e.target.value)} placeholder={DESTINO_SUGERIDO} />
         </label>
       )}
 
-      {temCaminho ? (
+      {gerando ? (
+        <>
+          <button type="button" onClick={criarNovo} disabled={gerar.isPending || !destinoNovo.trim()}>
+            {gerar.isPending ? "Criando…" : "Criar planilha"}
+          </button>
+          <button type="button" className="link" onClick={() => setGerando(false)} disabled={gerar.isPending}>
+            Cancelar
+          </button>
+        </>
+      ) : temCaminho ? (
         <button type="submit" disabled={exportar.isPending}>
           {exportar.isPending ? "Exportando…" : "Exportar planilha"}
         </button>
@@ -78,13 +107,11 @@ export function ExportarPlanilha() {
         </button>
       )}
 
-      {!temCaminho && (
-        <button type="button" onClick={gerarNovo} disabled={gerar.isPending}>
-          {gerar.isPending ? "Gerando…" : "Gerar planilha"}
-        </button>
+      {!gerando && !temCaminho && (
+        <button type="button" onClick={iniciarGerar}>Gerar planilha</button>
       )}
       <p className="ajuda">
-        Sem planilha? "Gerar planilha" cria um .xlsx novo com o mesmo layout de colunas e já deixa esse caminho como o da planilha de controle.
+        Sem planilha? "Gerar planilha" cria um .xlsx novo com o mesmo layout de colunas. Você escolhe onde salvar, e esse caminho vira o da planilha de controle.
       </p>
 
       {exportar.isSuccess && (
