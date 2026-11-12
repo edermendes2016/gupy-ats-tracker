@@ -95,6 +95,18 @@ describe("rotas HTTP", () => {
 });
 
 describe("DELETE /api/vagas/:id", () => {
+  it("aceita Content-Type JSON com corpo vazio (regressão: 'Body cannot be empty')", async () => {
+    const excluir = vi.fn(async () => undefined);
+    app = montar({ excluir });
+    const r = await app.inject({
+      method: "DELETE",
+      url: "/api/vagas/x?anonimo=false",
+      headers: { "content-type": "application/json" },
+    });
+    expect(r.statusCode).toBe(204);
+    expect(excluir).toHaveBeenCalledWith("x", false);
+  });
+
   it("responde 204 e repassa o modo anônimo à aplicação", async () => {
     const excluir = vi.fn(async () => undefined);
     app = montar({ excluir });

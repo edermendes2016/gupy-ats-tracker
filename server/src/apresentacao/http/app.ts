@@ -46,6 +46,18 @@ export function criarApp(
 ): FastifyInstance {
   const app = Fastify({ logger: opcoes.logger ?? false });
 
+  // DELETE (e outras chamadas sem corpo) pode vir com Content-Type JSON e corpo vazio.
+  // O parser padrão do Fastify recusa isso; aqui corpo vazio vira "sem corpo".
+  app.removeContentTypeParser("application/json");
+  app.addContentTypeParser("application/json", { parseAs: "string" }, (_req, corpo, pronto) => {
+    if (corpo === "") return pronto(null, undefined);
+    try {
+      pronto(null, JSON.parse(corpo as string));
+    } catch (erro) {
+      pronto(erro as Error, undefined);
+    }
+  });
+
   app.setErrorHandler((erro: FastifyError | Error, _req, resposta) => {
     for (const [classe, codigo] of STATUS_HTTP) {
       if (erro instanceof classe) {
