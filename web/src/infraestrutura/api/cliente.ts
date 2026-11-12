@@ -63,6 +63,12 @@ export const api = {
   analisarCurriculo: (entrada: EntradaAnalise) =>
     requisitar<ResultadoAnalise>("/api/analises", { method: "POST", body: JSON.stringify(entrada) }),
 
+  escolherPlanilha: () =>
+    requisitar<{ caminho: string } | null>("/api/planilha/escolher", { method: "POST" }),
+
+  gerarPlanilha: (caminho: string) =>
+    requisitar<{ caminho: string }>("/api/planilha/gerar", { method: "POST", body: JSON.stringify({ caminho }) }),
+
   exportarPlanilha: (caminho: string) =>
     requisitar<{ novas: number; existentes: number }>("/api/planilha", {
       method: "POST",

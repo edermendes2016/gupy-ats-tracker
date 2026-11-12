@@ -56,6 +56,10 @@ export function criarCasosDeUso(dep: Dependencias) {
     exportarPlanilha(caminho: string): Promise<{ novas: number; existentes: number }> {
       return dep.planilha.exportar(caminho);
     },
+
+    gerarPlanilha(caminho: string): Promise<void> {
+      return dep.planilha.gerarModelo(caminho);
+    },
   };
 }
 

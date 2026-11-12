@@ -40,7 +40,10 @@ const STATUS_HTTP: Array<[new (...a: any[]) => Error, number]> = [
   [ErroIndisponivel, 503],
 ];
 
-export function criarApp(casos: CasosDeUso, opcoes: { logger?: boolean } = {}): FastifyInstance {
+export function criarApp(
+  casos: CasosDeUso,
+  opcoes: { logger?: boolean; escolherArquivo?: () => Promise<string | null> } = {},
+): FastifyInstance {
   const app = Fastify({ logger: opcoes.logger ?? false });
 
   app.setErrorHandler((erro: FastifyError | Error, _req, resposta) => {
@@ -113,6 +116,21 @@ export function criarApp(casos: CasosDeUso, opcoes: { logger?: boolean } = {}): 
       requisitos: corpo.requisitos,
       modelo: corpo.modelo,
     });
+  });
+
+  app.post("/api/planilha/escolher", async (_req, resposta) => {
+    if (!opcoes.escolherArquivo) {
+      return resposta.status(501).send({ erro: "seleção de arquivo indisponível neste sistema: digite o caminho" });
+    }
+    const caminho = await opcoes.escolherArquivo();
+    if (!caminho) return resposta.status(204).send();
+    return { caminho };
+  });
+
+  app.post("/api/planilha/gerar", async (req, resposta) => {
+    const { caminho } = validar(ExportarPlanilhaBody, req.body);
+    await casos.gerarPlanilha(caminho);
+    return resposta.status(201).send({ caminho });
   });
 
   app.post("/api/planilha", async (req) => {

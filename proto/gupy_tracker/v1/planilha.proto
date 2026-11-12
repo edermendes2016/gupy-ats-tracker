@@ -11,6 +11,13 @@ message ExportarPlanilhaResponse {
   int32 existentes = 2;
 }
 
+message GerarModeloRequest {
+  string caminho = 1;  // onde criar o .xlsx novo (não pode existir)
+}
+
+message GerarModeloResponse {}
+
 service PlanilhaService {
   rpc Exportar(ExportarPlanilhaRequest) returns (ExportarPlanilhaResponse);
+  rpc GerarModelo(GerarModeloRequest) returns (GerarModeloResponse);
 }
