@@ -211,3 +211,64 @@ class PlanilhaDeControle(unittest.TestCase):
             v = {**vaga("a", "A&B <Ltda>", 80), "cargo": "Dev", "data": "2026-03-01"}
             planilha.exportar(caminho, [v])
             self.assertIn("A&amp;B &lt;Ltda&gt;", self._xml(caminho))
+
+
+class PlanilhaJaPreenchida(unittest.TestCase):
+    """Regressão: planilha salva pelo Excel (textos em sharedStrings, datas com estilo) não duplica linhas."""
+
+    SST = ["3CON", "Desenvolvedor Backend .Net Core", "desistencia", "Órgão Público"]
+
+    def _xlsx_preenchido(self, d):
+        from zipfile import ZipFile
+        from gupy_tracker import planilha
+        caminho = Path(d) / "controle.xlsx"
+        linha3 = ('<row r="3"><c r="A3" s="10"><v>46331</v></c><c r="B3" s="1" t="s"><v>0</v></c>'
+                  '<c r="C3" s="1" t="s"><v>1</v></c><c r="D3" s="15" t="s"><v>2</v></c>'
+                  '<c r="E3" s="14"/><c r="F3" s="1"/><c r="G3" s="1"/><c r="H3" s="7"/></row>')
+        linha4 = '<row r="4"><c r="A4" s="11"/><c r="B4" s="1"/><c r="C4" s="1"/><c r="D4" s="1"/></row>'
+        aba = ('<?xml version="1.0"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+               '<dimension ref="A1:H4"/><sheetData>'
+               '<row r="1"><c r="A1" t="inlineStr"><is><t>Controle</t></is></c></row>'
+               '<row r="2"><c r="A2" t="inlineStr"><is><t>Data</t></is></c></row>'
+               f'{linha3}{linha4}</sheetData></worksheet>')
+        sst = ('<?xml version="1.0"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+               + "".join(f"<si><t>{t}</t></si>" for t in self.SST) + "</sst>")
+        with ZipFile(caminho, "w") as z:
+            z.writestr("xl/worksheets/sheet1.xml", aba)
+            z.writestr("xl/sharedStrings.xml", sst)
+        return caminho
+
+    def _xml(self, caminho):
+        from zipfile import ZipFile
+        return ZipFile(caminho).read("xl/worksheets/sheet1.xml").decode()
+
+    def test_nao_duplica_vaga_digitada_a_mao_e_mantem_data(self):
+        from datetime import date
+        from gupy_tracker import planilha
+        with tempfile.TemporaryDirectory() as d:
+            caminho = self._xlsx_preenchido(d)
+            igual = {**vaga("a", "3CON", 80), "cargo": "Desenvolvedor Backend .NET Core",
+                     "data": "2026-11-12", "status": "analisada", "palavras_chave": ["C#"],
+                     "url": "https://trescon.gupy.io/job/1"}
+            self.assertEqual(planilha.exportar(caminho, [igual]), (0, 1))
+            xml = self._xml(caminho)
+            self.assertNotIn('<row r="5"', xml)  # nenhuma linha nova para a vaga já digitada
+            self.assertIn("<t xml:space=\"preserve\">C#</t>", xml)
+            self.assertIn("https://trescon.gupy.io/job/1", xml)
+
+            nova = {**vaga("b", "Spreader", 90), "cargo": "Dev Full Stack", "data": "2026-11-12",
+                    "palavras_chave": ["C#"]}
+            self.assertEqual(planilha.exportar(caminho, [nova]), (1, 0))
+            self.assertEqual(planilha.exportar(caminho, [nova]), (0, 1))
+            xml = self._xml(caminho)
+            self.assertEqual(xml.count("Spreader"), 1)
+            serial = (date(2026, 11, 12) - date(1899, 12, 30)).days
+            self.assertIn(f'<c r="A4" s="10"><v>{serial}</v></c>', xml)
+
+    def test_compara_sem_acento_e_caixa(self):
+        from gupy_tracker import planilha
+        with tempfile.TemporaryDirectory() as d:
+            caminho = self._xlsx_preenchido(d)
+            v = {**vaga("c", "ORGAO PUBLICO", 80), "cargo": "dev", "data": "2026-11-12"}
+            self.assertEqual(planilha.exportar(caminho, [{**v, "empresa": "Orgao Publico"}]), (1, 0))
+            self.assertEqual(planilha.exportar(caminho, [{**v, "empresa": "Órgão Público"}]), (0, 1))
