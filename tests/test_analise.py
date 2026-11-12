@@ -128,6 +128,11 @@ class Analisar(unittest.TestCase):
         r = analise.analisar(curriculo=CURRICULO, requisitos=vaga, hoje=HOJE)
         self.assertEqual(r.criterios["logistica"], 40)
 
+    def test_logistica_sem_informacao_fica_neutra(self):
+        r = analise.analisar(curriculo=CURRICULO, requisitos="Requisitos\n- C#", hoje=HOJE)
+        self.assertEqual(r.criterios["logistica"], analise.NEUTRO)
+        self.assertTrue(any("logística neutra" in a for a in r.avisos))
+
     def test_exige_vaga_e_curriculo(self):
         with self.assertRaises(ValueError):
             analise.analisar(curriculo=CURRICULO, hoje=HOJE)

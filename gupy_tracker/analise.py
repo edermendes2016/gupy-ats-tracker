@@ -243,9 +243,13 @@ def _modelo_da_vaga(vaga: str) -> str | None:
 
 
 def _nota_logistica(vaga: str, curriculo: str, modelo: str | None) -> tuple[int, list[str]]:
-    nota = 100
     avisos: list[str] = []
     l = norm(vaga)
+    modelo_conhecido = modelo or _modelo_da_vaga(vaga)
+    if not modelo_conhecido and "ingles" not in l:
+        # Nada na vaga sobre modelo nem idioma: não há como medir, então fica neutro.
+        return NEUTRO, ["a vaga não informa modelo de trabalho nem idioma; logística neutra"]
+    nota = 100
     if "ingles" in l:
         linhas_ingles = [norm(x) for x in _linhas(curriculo) if "ingles" in norm(x)]
         exige_alto = re.search(r"ingles[^\n]{0,40}(fluente|avancado)|(fluente|avancado)[^\n]{0,40}ingles", l)
@@ -258,7 +262,7 @@ def _nota_logistica(vaga: str, curriculo: str, modelo: str | None) -> tuple[int,
                 avisos.append("a vaga pede inglês fluente ou avançado e o currículo declara nível básico")
             else:
                 nota = min(nota, 70)
-    if (modelo or _modelo_da_vaga(vaga)) == "presencial":
+    if modelo_conhecido == "presencial":
         nota -= 20
         avisos.append("vaga presencial: confirme se a localidade é compatível")
     return max(0, nota), avisos
