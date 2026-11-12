@@ -82,7 +82,7 @@ export function calcularConquistas(vagas: Vaga[], hoje: string, anonimo = false)
     contratado: {
       titulo: "Contratado",
       requisito: "Receber uma oferta. Título supremo, sem pressa.",
-      motivacao: "Você deixou de ser desempregado, oficialmente. Já pode desligar o alarme das 7h.",
+      motivacao: "Missão cumprida! Pode ligar o alarme das 7h com orgulho: agora ele toca para um emprego seu.",
       desbloqueada: vagas.some((v) => alcancou(v, "oferta")),
       detalhe: null,
     },
