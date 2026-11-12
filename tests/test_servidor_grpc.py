@@ -122,6 +122,29 @@ if __name__ == "__main__":
     unittest.main()
 
 
+CV_FICTICIO = """Ana Exemplo
+ana.exemplo@email.com | (11) 91234-5678 | São Paulo, SP
+
+Resumo
+Desenvolvedora backend com experiência em C#, ASP.NET Core e Entity Framework, com foco em APIs REST e boas práticas de testes.
+
+Experiência
+Empresa Fictícia Ltda | Desenvolvedora Pleno
+Jun/2022 – atual
+Desenvolvimento de APIs em C# e ASP.NET Core, modelagem com Entity Framework e SQL Server, deploy em Azure App Service.
+
+Empresa Exemplo S.A. | Analista de Sistemas
+Jan/2019 – Mai/2022
+Manutenção de sistemas internos, integração entre serviços e automação de rotinas de dados.
+
+Formação
+Universidade Fictícia | Bacharelado em Ciência da Computação | 2014–2018
+
+Habilidades
+C#, ASP.NET Core, Entity Framework, SQL Server, Docker, Git, Azure DevOps, Scrum
+"""
+
+
 @unittest.skipUnless(DISPONIVEL, MOTIVO)
 class AnaliseGrpcTest(unittest.TestCase):
     def test_analisar_devolve_criterios_e_recusa_formato_sem_suporte(self):
@@ -138,7 +161,7 @@ class AnaliseGrpcTest(unittest.TestCase):
             try:
                 stub = agrpc.AnaliseServiceStub(grpc.insecure_channel(f"127.0.0.1:{porta}"))
                 r = stub.Analisar(apb.AnalisarRequest(
-                    curriculo=b"C#, ASP.NET Core e Entity Framework em producao.",
+                    curriculo=CV_FICTICIO.encode("utf-8"),
                     nome_arquivo="cv.txt",
                     requisitos="Requisitos\n- C#\n- RabbitMQ",
                 ))
