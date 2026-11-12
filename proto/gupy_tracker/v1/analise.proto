@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package gupy_tracker.v1;
+
+// Análise de aderência: o BFF envia o arquivo do currículo e o texto da vaga; o serviço Python devolve os critérios.
+message AnalisarRequest {
+  bytes curriculo = 1;       // conteúdo do arquivo (.pdf, .docx, .txt ou .md)
+  string nome_arquivo = 2;   // o nome define o formato de leitura
+  string descricao = 3;      // texto da vaga colado da Gupy (ou só a descrição)
+  string responsabilidades = 4;
+  string requisitos = 5;
+  string modelo = 6;         // remoto, hibrido ou presencial; vazio = inferir pelo texto
+}
+
+message CriteriosAnalise {
+  int32 obrigatorios = 1;
+  int32 desejaveis = 2;
+  int32 experiencia = 3;
+  int32 dominio = 4;
+  int32 logistica = 5;
+}
+
+message AnalisarResponse {
+  CriteriosAnalise criterios = 1;
+  int32 match_score = 2;
+  string classificacao = 3;
+  repeated string palavras_chave = 4;
+  repeated string lacunas = 5;
+  repeated string avisos = 6;
+  repeated string sugestoes = 7;
+  double anos_curriculo = 8;
+  double anos_pedidos = 9;   // 0 quando a vaga não informa
+}
+
+service AnaliseService {
+  rpc Analisar(AnalisarRequest) returns (AnalisarResponse);
+}

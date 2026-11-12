@@ -15,7 +15,7 @@ from concurrent import futures
 from datetime import date
 from pathlib import Path
 
-from . import armazenamento, casos_de_uso, planilha, relatorio
+from . import analise, armazenamento, casos_de_uso, leitor_texto, planilha, relatorio
 
 LOOPBACK = ("127.0.0.1", "localhost")
 ENDERECO_PADRAO = "127.0.0.1:50051"
@@ -144,10 +144,45 @@ class PlanilhaServicer(_Base):
         return ppb.ExportarPlanilhaResponse(novas=novas, existentes=existentes)
 
 
+class AnaliseServicer(_Base):
+    """Implementa gupy_tracker.v1.AnaliseService. Não grava nada: só calcula."""
+
+    def Analisar(self, req, context):
+        from .v1 import analise_pb2 as apb
+
+        grpc = _grpc()
+        try:
+            texto = leitor_texto.ler_conteudo(req.nome_arquivo, req.curriculo)
+            r = analise.analisar(
+                curriculo=texto,
+                descricao=req.descricao,
+                responsabilidades=req.responsabilidades,
+                requisitos=req.requisitos,
+                modelo=req.modelo or None,
+            )
+        except ValueError as e:
+            context.abort(grpc.StatusCode.INVALID_ARGUMENT, str(e))
+        c = r.criterios
+        return apb.AnalisarResponse(
+            criterios=apb.CriteriosAnalise(
+                obrigatorios=c["obrigatorios"], desejaveis=c["desejaveis"], experiencia=c["experiencia"],
+                dominio=c["dominio"], logistica=c["logistica"],
+            ),
+            match_score=r.match_score,
+            classificacao=r.classificacao,
+            palavras_chave=r.palavras_chave,
+            lacunas=r.lacunas,
+            avisos=r.avisos,
+            sugestoes=r.sugestoes,
+            anos_curriculo=r.anos_curriculo,
+            anos_pedidos=r.anos_pedidos or 0.0,
+        )
+
+
 def criar_servidor(caminho: Path, endereco: str = ENDERECO_PADRAO, max_workers: int = 4):
     """Monta o servidor sem iniciá-lo. Devolve (servidor, porta efetiva)."""
     grpc = _grpc()
-    from .v1 import planilha_pb2_grpc, ranking_pb2_grpc, vagas_pb2_grpc
+    from .v1 import analise_pb2_grpc, planilha_pb2_grpc, ranking_pb2_grpc, vagas_pb2_grpc
 
     host = endereco.rsplit(":", 1)[0]
     if host not in LOOPBACK:
@@ -158,6 +193,7 @@ def criar_servidor(caminho: Path, endereco: str = ENDERECO_PADRAO, max_workers: 
     vagas_pb2_grpc.add_VagasServiceServicer_to_server(VagasServicer(caminho, trava), servidor)
     ranking_pb2_grpc.add_RankingServiceServicer_to_server(RankingServicer(caminho, trava), servidor)
     planilha_pb2_grpc.add_PlanilhaServiceServicer_to_server(PlanilhaServicer(caminho, trava), servidor)
+    analise_pb2_grpc.add_AnaliseServiceServicer_to_server(AnaliseServicer(caminho, trava), servidor)
     porta = servidor.add_insecure_port(endereco)
     return servidor, porta
 

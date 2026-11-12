@@ -18,6 +18,31 @@ export interface RankingRepositorio {
   metricas(): Promise<Metricas>;
 }
 
+export interface EntradaAnalise {
+  nomeArquivo: string;
+  curriculo: Buffer;
+  descricao?: string;
+  responsabilidades?: string;
+  requisitos?: string;
+  modelo?: string;
+}
+
+export interface ResultadoAnalise {
+  criterios: Vaga["criterios"];
+  matchScore: number;
+  classificacao: string;
+  palavrasChave: string[];
+  lacunas: string[];
+  avisos: string[];
+  sugestoes: string[];
+  anosCurriculo: number;
+  anosPedidos: number | null;
+}
+
+export interface AnaliseRepositorio {
+  analisar(entrada: EntradaAnalise): Promise<ResultadoAnalise>;
+}
+
 export interface PlanilhaRepositorio {
   exportar(caminho: string): Promise<{ novas: number; existentes: number }>;
 }
