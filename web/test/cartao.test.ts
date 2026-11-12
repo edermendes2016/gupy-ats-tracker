@@ -54,6 +54,17 @@ describe("links de compartilhamento", () => {
   });
 
   it("urlPublica descarta query e hash", () => {
-    expect(urlPublica({ origin: "https://a.test", pathname: "/x" })).toBe("https://a.test/x");
+    expect(urlPublica({ protocol: "https:", hostname: "a.test", origin: "https://a.test", pathname: "/x" })).toBe("https://a.test/x");
+  });
+
+  it("urlPublica ignora endereços locais", () => {
+    for (const hostname of ["localhost", "127.0.0.1", "192.168.0.10", "10.0.0.2", "172.20.1.1"]) {
+      expect(urlPublica({ protocol: "http:", hostname, origin: `http://${hostname}`, pathname: "/" })).toBeNull();
+    }
+  });
+
+  it("sem URL pública, LinkedIn e Facebook somem e as redes de texto continuam", () => {
+    const ids = linksCompartilhamento(texto, null).map((l) => l.id);
+    expect(ids).toEqual(["x", "whatsapp", "telegram", "email"]);
   });
 });

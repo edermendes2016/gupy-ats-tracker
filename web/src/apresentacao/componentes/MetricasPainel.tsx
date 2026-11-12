@@ -132,7 +132,8 @@ function CompartilharCartao({ m, anonimo }: { m: Metricas; anonimo: boolean }) {
   async function compartilharNativo() {
     setAviso(null);
     try {
-      const dados: ShareData = { title: ASSUNTO_CARTAO, text: texto, url: urlPublica(window.location) };
+      const url = urlPublica(window.location);
+      const dados: ShareData = { title: ASSUNTO_CARTAO, text: texto, ...(url ? { url } : {}) };
       const blob = await obterPng();
       const arquivo = new File([blob], "gupy-tracker-metricas.png", { type: "image/png" });
       if (navigator.canShare?.({ files: [arquivo] })) {
@@ -159,7 +160,8 @@ function CompartilharCartao({ m, anonimo }: { m: Metricas; anonimo: boolean }) {
     );
   }
 
-  const links = linksCompartilhamento(texto, urlPublica(window.location));
+  const url = urlPublica(window.location);
+  const links = linksCompartilhamento(texto, url);
 
   return (
     <section className="compartilhar" aria-label="Compartilhar">
@@ -178,7 +180,9 @@ function CompartilharCartao({ m, anonimo }: { m: Metricas; anonimo: boolean }) {
           </li>
         ))}
       </ul>
-      <p className="ajuda">No LinkedIn o texto não vai pré-preenchido: use “Copiar texto” e cole na publicação.</p>
+      {links.some((l) => l.id === "linkedin") && (
+        <p className="ajuda">No LinkedIn o texto não vai pré-preenchido: use “Copiar texto” e cole na publicação.</p>
+      )}
       {aviso && <p role="status" className="ajuda">{aviso}</p>}
       {png && <img src={png.url} alt="Cartão com as métricas anônimas" className="previa-cartao" />}
       <pre className="texto-cartao">{texto}</pre>
