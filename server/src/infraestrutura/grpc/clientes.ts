@@ -56,6 +56,14 @@ export function traduzirErro(err: grpc.ServiceError): Error {
     case grpc.status.FAILED_PRECONDITION:
       // Ex.: planilha inexistente ou ilegível. É um problema do pedido, não do servidor.
       return new ErroEntradaInvalida(detalhe);
+    case grpc.status.UNIMPLEMENTED:
+      // Quase sempre o processo Python é mais antigo que o código: o método não existe nele.
+      return new ErroIndisponivel(
+        "o serviço Python não tem este método (versão antiga). Pare o servidor gRPC, rode " +
+          "'python scripts/gerar_proto.py' (no Windows, 'py scripts\\gerar_proto.py') e suba de novo " +
+          "com 'python -m gupy_tracker.servidor_grpc' (no Windows, 'py -m ...'). " +
+          "Detalhe: " + detalhe,
+      );
     case grpc.status.UNAVAILABLE:
     case grpc.status.DEADLINE_EXCEEDED:
       return new ErroIndisponivel("serviço de vagas indisponível (gRPC): " + detalhe);
