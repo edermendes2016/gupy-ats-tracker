@@ -7,6 +7,7 @@ import { MetricasPainel } from "./componentes/MetricasPainel";
 import { ExportarPlanilha } from "./componentes/ExportarPlanilha";
 import { AventuraPainel } from "./componentes/AventuraPainel";
 import { ConquistasPainel } from "./componentes/ConquistasPainel";
+import { PASSOS_TUTORIAL, Tutorial, marcarTutorialVisto, tutorialJaVisto } from "./componentes/Tutorial";
 import { ROTULO_STATUS, STATUS, type Status } from "../dominio/tipos";
 
 type Aba = "ranking" | "vagas" | "metricas" | "aventura" | "conquistas" | "nova";
@@ -24,6 +25,19 @@ export function App() {
   const [anonimo, setAnonimo] = useState(false);
   const [selecionada, setSelecionada] = useState<string | null>(null);
   const [filtroStatus, setFiltroStatus] = useState<Status | "">("");
+  // Tour de primeiro uso: abre sozinho só na primeira visita; "Tutorial" no topo reabre.
+  const [passoTutorial, setPassoTutorial] = useState<number | null>(() => (tutorialJaVisto() ? null : 0));
+
+  function irParaPassoTutorial(passo: number) {
+    setPassoTutorial(passo);
+    setAba(PASSOS_TUTORIAL[passo]!.aba);
+  }
+
+  function fecharTutorial() {
+    marcarTutorialVisto();
+    setPassoTutorial(null);
+    setAba("ranking");
+  }
 
   // Cada aba só busca os próprios dados.
   const ranking = useRanking(anonimo, aba === "ranking");
@@ -50,6 +64,9 @@ export function App() {
           <input type="checkbox" role="switch" checked={anonimo} onChange={(e) => setAnonimo(e.target.checked)} />
           Modo anônimo
         </label>
+        <button type="button" className="rever-tutorial" onClick={() => irParaPassoTutorial(0)}>
+          Tutorial
+        </button>
       </header>
 
       <main className="conteudo">
@@ -97,6 +114,10 @@ export function App() {
           </section>
         )}
       </main>
+
+      {passoTutorial !== null && (
+        <Tutorial passo={passoTutorial} aoMudarPasso={irParaPassoTutorial} aoFechar={fecharTutorial} />
+      )}
 
       {selecionada && (
         <DetalheVaga id={selecionada} anonimo={anonimo} onFechar={() => setSelecionada(null)} />

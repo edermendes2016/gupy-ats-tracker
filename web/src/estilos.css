@@ -392,3 +392,33 @@ button:disabled { opacity: 0.6; cursor: default; }
 .aventura-vaga-texto { display: flex; flex-direction: column; min-width: 0; }
 .aventura-vaga-nome { font-weight: 600; overflow-wrap: anywhere; }
 .aventura-vaga-xp { min-width: 72px; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Tutorial de primeiro uso: cartão flutuante que não bloqueia a interface. */
+.rever-tutorial {
+  border: 1px solid var(--borda); background: var(--superficie); color: var(--marca);
+  border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+}
+.rever-tutorial:hover { background: var(--hover); }
+.tutorial {
+  position: fixed; right: 16px; bottom: 16px; z-index: 30; width: min(380px, calc(100vw - 32px));
+  background: var(--superficie); border: 1px solid var(--borda); border-top: 4px solid var(--marca);
+  border-radius: var(--raio); box-shadow: var(--sombra-alta); padding: 16px;
+}
+.tutorial:focus { outline: none; }
+.tutorial:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
+.tutorial-passo { margin: 0 0 6px; font-size: 0.8rem; color: var(--suave); font-weight: 600; }
+.tutorial-trilho { height: 6px; background: var(--trilho); border-radius: 999px; overflow: hidden; margin-bottom: 12px; }
+.tutorial-trilho span { display: block; height: 100%; background: linear-gradient(90deg, var(--marca), var(--marca-2)); border-radius: 999px; transition: width 0.2s; }
+.tutorial-titulo { margin: 0 0 6px; font-size: 1.05rem; letter-spacing: -0.01em; }
+.tutorial-texto { margin: 0 0 14px; color: var(--texto); font-size: 0.92rem; }
+.tutorial-acoes { display: flex; align-items: center; gap: 8px; }
+.tutorial-espaco { flex: 1; }
+.tutorial-acoes button { font: inherit; font-size: 0.9rem; border-radius: var(--raio-sm); padding: 6px 14px; cursor: pointer; }
+.tutorial-pular { background: none; border: none; color: var(--suave); padding: 6px 4px; }
+.tutorial-pular:hover { color: var(--texto); text-decoration: underline; }
+.tutorial-voltar { background: var(--superficie); border: 1px solid var(--borda); color: var(--texto); }
+.tutorial-proximo { background: var(--marca); border: 1px solid var(--marca); color: #fff; font-weight: 600; }
+.tutorial-acoes button:focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
+@media (max-width: 600px) {
+  .tutorial { right: 8px; left: 8px; bottom: 8px; width: auto; }
+}
