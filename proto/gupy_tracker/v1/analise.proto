@@ -30,6 +30,8 @@ message AnalisarResponse {
   repeated string sugestoes = 7;
   double anos_curriculo = 8;
   double anos_pedidos = 9;   // 0 quando a vaga não informa
+  string apresentacao = 10;  // resposta sugerida: "A empresa deseja saber mais sobre você!" (até 1.500 caracteres)
+  repeated string habilidades_valiosas = 11;  // até 3 habilidades do currículo que a vaga pede
 }
 
 service AnaliseService {

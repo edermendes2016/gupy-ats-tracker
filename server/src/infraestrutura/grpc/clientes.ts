@@ -177,6 +177,8 @@ export function criarRepositoriosGrpc(endereco: string): Repositorios {
         sugestoes: res.sugestoes ?? [],
         anosCurriculo: Number(res.anos_curriculo),
         anosPedidos: anosPedidos > 0 ? anosPedidos : null,
+        apresentacao: res.apresentacao ?? "",
+        habilidadesValiosas: res.habilidades_valiosas ?? [],
       };
     },
   };

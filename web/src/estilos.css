@@ -79,3 +79,9 @@ button:disabled { opacity: 0.6; cursor: default; }
 .dica-botao { width: 1.6em; height: 1.6em; border-radius: 50%; border: 1px solid var(--borda); background: #fff; color: #333; font-size: 0.8rem; line-height: 1; padding: 0; cursor: pointer; }
 .dica-botao:focus-visible { outline: 2px solid #3f51b5; outline-offset: 2px; }
 .dica-texto { position: absolute; z-index: 10; top: calc(100% + 6px); right: 0; width: 260px; max-width: 80vw; padding: 8px 10px; border: 1px solid var(--borda); border-radius: 8px; background: #fff; color: #222; box-shadow: 0 4px 12px rgba(0,0,0,.15); font-size: 0.85rem; line-height: 1.35; font-weight: normal; }
+
+/* Respostas sugeridas (Apresente-se!) */
+.resposta-gupy { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; }
+.resposta-gupy textarea { width: 100%; box-sizing: border-box; font: inherit; padding: 8px 10px; border: 1px solid var(--borda); border-radius: 8px; resize: vertical; }
+.resposta-rodape { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.resposta-rodape button { padding: 4px 12px; }

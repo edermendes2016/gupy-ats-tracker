@@ -8,10 +8,11 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 
 from .modelo import calcular_match_score, classificar
+from .respostas_gupy import montar as montar_respostas
 from .validacao_curriculo import verificar as verificar_curriculo
 
 # Nota usada quando não há como medir um critério. Sempre vem com um aviso.
@@ -94,8 +95,8 @@ MESES = {"jan": 1, "fev": 2, "mar": 3, "abr": 4, "mai": 5, "jun": 6,
          "jul": 7, "ago": 8, "set": 9, "out": 10, "nov": 11, "dez": 12}
 
 _RE_PERIODO = re.compile(
-    r"(?:(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)[a-z]*/)?(\d{4})\s*[-–—]\s*"
-    r"(?:(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)[a-z]*/)?(\d{4}|atual|presente|hoje)"
+    r"(?<![\d-])(?:(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)[a-z]*/)?((?:19|20)\d{2})(?!\d)\s*[-–—]\s*"
+    r"(?:(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)[a-z]*/)?((?:19|20)\d{2}(?!\d)|atual|presente|hoje)"
 )
 
 
@@ -283,6 +284,22 @@ class Analise:
     sugestoes: list[str]
     anos_curriculo: float
     anos_pedidos: float | None
+    apresentacao: str = ""
+    habilidades_valiosas: list[str] = field(default_factory=list)
+
+
+_RE_CARGO = re.compile(r"desenvolv|analista|engenheir|arquitet|programad|l[ií]der|gerente|coordenad|consult|t[eé]cnic|tech lead|scrum")
+
+
+def _cargo_atual(curriculo: str) -> str | None:
+    """Primeiro cargo de uma linha 'Empresa | Cargo' do currículo (o mais recente, em geral)."""
+    for linha in curriculo.splitlines():
+        if "|" not in linha:
+            continue
+        parte = linha.split("|")[-1].strip()
+        if parte and _RE_CARGO.search(norm(parte)):
+            return parte
+    return None
 
 
 def analisar(
@@ -353,6 +370,16 @@ def analisar(
     if pedido and tempo < pedido:
         sugestoes.append(f"A vaga pede {pedido:g} anos e o currículo soma {tempo:g} anos pelos períodos. Confira se os períodos de cada experiência estão completos.")
 
+    pesos_vaga = {
+        t: 3 if t in obrigatorias else 2 if t in desejaveis else 1 for t in tecnologias_vaga
+    }
+    respostas = montar_respostas(
+        tecnologias_cv={t: c for t, c in cobertura.items() if c > 0},
+        pesos_vaga=pesos_vaga,
+        cargo=_cargo_atual(curriculo),
+        anos=tempo,
+    )
+
     score = calcular_match_score(criterios)
     return Analise(
         criterios=criterios,
@@ -364,6 +391,8 @@ def analisar(
         sugestoes=sugestoes,
         anos_curriculo=tempo,
         anos_pedidos=pedido,
+        apresentacao=respostas.apresentacao,
+        habilidades_valiosas=respostas.habilidades,
     )
 
 

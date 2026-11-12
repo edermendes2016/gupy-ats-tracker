@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Dica } from "./Dica";
+import { RespostaGupy } from "./RespostaGupy";
 import { useAnalisarCurriculo, useRegistrarVaga } from "../../aplicacao/consultas";
 import {
   CRITERIOS, MODELOS, ROTULO_MODELO, ROTULO_SENIORIDADE, SENIORIDADES,
@@ -42,6 +43,8 @@ export function FormularioVaga({ aoCriar }: { aoCriar: () => void }) {
   const [palavras, setPalavras] = useState("");
   const [lacunas, setLacunas] = useState("");
   const [descricao, setDescricao] = useState("");
+  const [apresentacao, setApresentacao] = useState("");
+  const [habilidades, setHabilidades] = useState("");
 
   const lista = (texto: string) => texto.split(",").map((s) => s.trim()).filter(Boolean);
 
@@ -59,6 +62,8 @@ export function FormularioVaga({ aoCriar }: { aoCriar: () => void }) {
         onSuccess: (r) => {
           setResultado(r);
           setCriterios(r.criterios);
+          setApresentacao(r.apresentacao);
+          setHabilidades(r.habilidadesValiosas.join("\n"));
           setPalavras(r.palavrasChave.join(", "));
           setLacunas(r.lacunas.join(", "));
           // O link da vaga vem do próprio texto colado, se ele trouxer um; senão, fica como digitado.
@@ -114,6 +119,22 @@ export function FormularioVaga({ aoCriar }: { aoCriar: () => void }) {
             {resultado.avisos.length > 0 && (
               <ul className="avisos">{resultado.avisos.map((a) => <li key={a}>{a}</li>)}</ul>
             )}
+            <h4>Apresente-se! (sugestões para a etapa da Gupy)</h4>
+            <RespostaGupy
+              id="resposta-apresentacao"
+              titulo="A empresa deseja saber mais sobre você!"
+              valor={apresentacao}
+              aoMudar={setApresentacao}
+              limite={1500}
+            />
+            <RespostaGupy
+              id="resposta-habilidades"
+              titulo="Quais são as suas habilidades mais valiosas para esta vaga? (uma por linha)"
+              valor={habilidades}
+              aoMudar={setHabilidades}
+              multilinha
+              contagem={`${habilidades.split("\n").filter((h) => h.trim()).length} de 3 habilidades`}
+            />
           </div>
         )}
       </fieldset>
