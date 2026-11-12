@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package gupy_tracker.v1;
+
+import "google/protobuf/empty.proto";
+import "gupy_tracker/v1/vagas.proto";
+
+message RankingRequest {
+  bool anonimo = 1;
+}
+
+message RankingResponse {
+  repeated Vaga vagas_ordenadas = 1;  // ordenadas por match_score, decrescente
+}
+
+message MetricasResponse {
+  int32 total = 1;
+  int32 enviadas = 2;
+  int32 chegaram_entrevista = 3;
+  double taxa_conversao = 4;          // 0.0 a 1.0
+}
+
+service RankingService {
+  rpc Ranking(RankingRequest) returns (RankingResponse);
+  rpc Metricas(google.protobuf.Empty) returns (MetricasResponse);
+}

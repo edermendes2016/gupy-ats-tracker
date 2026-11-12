@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package gupy_tracker.v1;
+
+message ExportarPlanilhaRequest {
+  string caminho = 1;  // caminho local do .xlsx; só faz sentido com o serviço na mesma máquina
+}
+
+message ExportarPlanilhaResponse {
+  int32 novas = 1;
+  int32 existentes = 2;
+}
+
+service PlanilhaService {
+  rpc Exportar(ExportarPlanilhaRequest) returns (ExportarPlanilhaResponse);
+}
