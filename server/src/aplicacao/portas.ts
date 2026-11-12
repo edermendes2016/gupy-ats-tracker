@@ -11,6 +11,7 @@ export interface VagaRepositorio {
   obter(id: string, anonimo: boolean): Promise<Vaga>;
   registrar(nova: NovaVaga): Promise<Vaga>;
   atualizarStatus(id: string, status: Status, data?: string): Promise<Vaga>;
+  excluir(id: string, anonimo: boolean): Promise<void>;
 }
 
 export interface RankingRepositorio {

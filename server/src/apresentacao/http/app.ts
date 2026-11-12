@@ -82,6 +82,13 @@ export function criarApp(casos: CasosDeUso, opcoes: { logger?: boolean } = {}): 
     return resposta.status(201).send(vagaJson(criada));
   });
 
+  app.delete<{ Params: { id: string } }>("/api/vagas/:id", async (req, resposta) => {
+    const { id } = validar(IdParams, req.params);
+    const { anonimo } = validar(AnonimoQuery, req.query);
+    await casos.excluirVaga(id, anonimo);
+    return resposta.status(204).send();
+  });
+
   app.patch<{ Params: { id: string } }>("/api/vagas/:id/status", async (req) => {
     const { id } = validar(IdParams, req.params);
     const { status, data } = validar(AtualizarStatusBody, req.body);

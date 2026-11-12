@@ -105,6 +105,20 @@ class VagasServicer(_Base):
         return vaga_para_proto(vaga, detalhe=True)
 
 
+    def ExcluirVaga(self, req, context):
+        from .v1 import vagas_pb2 as pb
+
+        grpc = _grpc()
+        with self._trava:
+            vagas = armazenamento.carregar(self._caminho)
+            try:
+                casos_de_uso.excluir_vaga(vagas, req.id, anonimo=req.anonimo)
+            except casos_de_uso.VagaNaoEncontrada as e:
+                context.abort(grpc.StatusCode.NOT_FOUND, str(e))
+            armazenamento.salvar(self._caminho, vagas)
+        return pb.ExcluirVagaResponse()
+
+
 class RankingServicer(_Base):
     """Implementa gupy_tracker.v1.RankingService."""
 

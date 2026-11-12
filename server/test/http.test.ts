@@ -18,6 +18,7 @@ function montar(sobrescrever: Partial<Parameters<typeof criarCasosDeUso>[0]["vag
       obter: vi.fn(async () => VAGA),
       registrar: vi.fn(async () => VAGA),
       atualizarStatus: vi.fn(async () => VAGA),
+      excluir: vi.fn(async () => undefined),
       ...sobrescrever,
     },
     ranking: {
@@ -90,6 +91,16 @@ describe("rotas HTTP", () => {
     app = montar();
     expect((await app.inject({ method: "GET", url: "/api/ranking" })).json()).toHaveLength(1);
     expect((await app.inject({ method: "GET", url: "/api/metricas" })).json().total).toBe(1);
+  });
+});
+
+describe("DELETE /api/vagas/:id", () => {
+  it("responde 204 e repassa o modo anônimo à aplicação", async () => {
+    const excluir = vi.fn(async () => undefined);
+    app = montar({ excluir });
+    const r = await app.inject({ method: "DELETE", url: "/api/vagas/empresa-01-2026-04?anonimo=true" });
+    expect(r.statusCode).toBe(204);
+    expect(excluir).toHaveBeenCalledWith("empresa-01-2026-04", true);
   });
 });
 
