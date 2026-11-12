@@ -7,7 +7,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
-from . import armazenamento, casos_de_uso, planilha, relatorio, vazamento
+from . import analise, armazenamento, casos_de_uso, curriculo, planilha, relatorio, vazamento
 from .modelo import AREAS, CORTE_VIABILIDADE, PESOS, SENIORIDADES, STATUS
 
 
@@ -16,6 +16,63 @@ def _texto(valor: str | None) -> str | None:
     if valor and valor.startswith("@"):
         return Path(valor[1:]).read_text(encoding="utf-8").strip()
     return valor
+
+
+def _imprimir_analise(r: analise.Analise) -> None:
+    print(f"Match Score {r.match_score}% ({r.classificacao})")
+    for nome, peso in PESOS.items():
+        print(f"  {nome:<12} {r.criterios[nome]:>3}  (peso {peso}%)")
+    print("Palavras-chave encontradas: " + (", ".join(r.palavras_chave) or "nenhuma"))
+    print("Lacunas: " + (", ".join(r.lacunas) or "nenhuma"))
+    for aviso in r.avisos:
+        print(f"Aviso: {aviso}")
+    if r.match_score < CORTE_VIABILIDADE:
+        print(f"Abaixo do corte de {CORTE_VIABILIDADE}%: não vale o esforço.")
+
+
+def cmd_analisar(args, caminho: Path) -> int:
+    try:
+        texto_cv = curriculo.ler_curriculo(Path(args.cv))
+        descricao = _texto(args.descricao) or ""
+        responsabilidades = _texto(args.responsabilidades) or ""
+        requisitos = _texto(args.requisitos) or ""
+        resultado = analise.analisar(curriculo=texto_cv, descricao=descricao,
+                                     responsabilidades=responsabilidades, requisitos=requisitos,
+                                     modelo=args.modelo)
+    except ValueError as e:
+        raise SystemExit(f"erro: {e}")
+    _imprimir_analise(resultado)
+    if not args.salvar:
+        print("Nada foi gravado. Use --salvar --empresa --cargo para registrar a vaga.")
+        return 0
+    if not (args.empresa and args.cargo):
+        raise SystemExit("erro: --salvar exige --empresa e --cargo")
+    vagas = armazenamento.carregar(caminho)
+    try:
+        vaga = casos_de_uso.registrar_vaga(
+            vagas,
+            data=args.data,
+            empresa=args.empresa,
+            cargo=args.cargo,
+            criterios=resultado.criterios,
+            senioridade=args.senioridade,
+            area=args.area,
+            modelo=args.modelo,
+            url=args.url,
+            status=args.status,
+            palavras_chave=resultado.palavras_chave,
+            lacunas=resultado.lacunas,
+            descricao=descricao or None,
+            responsabilidades=responsabilidades or None,
+            requisitos=requisitos or None,
+        )
+    except casos_de_uso.VagaInvalida as e:
+        raise SystemExit(f"vaga inválida: {e}")
+    except casos_de_uso.VagaDuplicada as e:
+        raise SystemExit(str(e))
+    armazenamento.salvar(caminho, vagas)
+    print(f"gravada: {vaga['id']}")
+    return 0
 
 
 def cmd_adicionar(args, caminho: Path) -> int:
@@ -138,6 +195,22 @@ def criar_parser() -> argparse.ArgumentParser:
     a.add_argument("--responsabilidades", help="campo 'Responsabilidades e atribuições' (texto ou @arquivo.txt)")
     a.add_argument("--requisitos", help="campo 'Requisitos e qualificações' (texto ou @arquivo.txt)")
     a.set_defaults(func=cmd_adicionar, escrita=True)
+
+    an = sub.add_parser("analisar", help="calcula a aderência do currículo à vaga (sem API paga)")
+    an.add_argument("--cv", required=True, metavar="ARQUIVO", help="currículo em .txt, .md, .docx ou .pdf com texto")
+    an.add_argument("--descricao", help="campo Descrição da vaga (texto ou @arquivo.txt)")
+    an.add_argument("--responsabilidades", help="campo Responsabilidades e atribuições (texto ou @arquivo.txt)")
+    an.add_argument("--requisitos", help="campo Requisitos e qualificações (texto ou @arquivo.txt)")
+    an.add_argument("--modelo", choices=["remoto", "hibrido", "presencial"])
+    an.add_argument("--salvar", action="store_true", help="registra a vaga com a análise (exige --empresa e --cargo)")
+    an.add_argument("--empresa")
+    an.add_argument("--cargo")
+    an.add_argument("--data", default=hoje)
+    an.add_argument("--senioridade", choices=SENIORIDADES, default="nao_informada")
+    an.add_argument("--area", choices=AREAS, default="outra")
+    an.add_argument("--url")
+    an.add_argument("--status", choices=STATUS, default="analisada")
+    an.set_defaults(func=cmd_analisar, escrita=True)
 
     s = sub.add_parser("status", help="atualiza o status de uma vaga")
     s.add_argument("id")
