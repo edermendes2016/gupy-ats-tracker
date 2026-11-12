@@ -159,7 +159,7 @@ message Historico { string data = 1; Status status = 2; }
 // --- vagas ---
 message ListarVagasRequest { optional Status status = 1; bool anonimo = 2; }
 message ListarVagasResponse { repeated Vaga vagas = 1; }
-message ObterVagaRequest { string id = 1; }
+message ObterVagaRequest { string id = 1; bool anonimo = 2; }  // anonimo também mascara id, url e campos de texto
 message RegistrarVagaRequest { Vaga vaga = 1; }   // id e match_score são ignorados na entrada
 message AtualizarStatusRequest { string id = 1; Status novo_status = 2; string data = 3; }
 
@@ -191,7 +191,7 @@ service PlanilhaService {
 
 Pontos de atenção do contrato:
 - **Score calculado no servidor.** O cliente nunca recalcula o Match Score. Assim a regra fica em um lugar só (`modelo.py`).
-- **`anonimo` no contrato.** Com `anonimo = true`, o serviço já devolve dados mascarados. A UI nunca recebe nomes reais que não deveria mostrar.
+- **`anonimo` no contrato.** Com `anonimo = true`, o serviço já devolve dados mascarados, em listagem, ranking e detalhe (`ObterVaga`). A UI nunca recebe nomes reais que não deveria mostrar.
 - **`Status` com `STATUS_DESCONHECIDO = 0`.** Padrão do proto3, para que um valor ausente não seja confundido com um status válido.
 - **Campos de texto da vaga são `optional` e não vão em listagens.** Reduz o tráfego e o risco de vazar descrições em logs.
 - **Versão no pacote (`v1`).** Permite evoluir o contrato sem quebrar a UI.
