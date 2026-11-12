@@ -96,7 +96,7 @@ function Evolucao({ m }: { m: Metricas }) {
 
 const paraItens = (t: Termo[]) => t.map((x) => ({ nome: x.nome, valor: x.vagas }));
 
-function CompartilharCartao({ m }: { m: Metricas }) {
+function CompartilharCartao({ m, anonimo }: { m: Metricas; anonimo: boolean }) {
   const [png, setPng] = useState<{ url: string; blob: Blob } | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const cartao = montarCartao(m);
@@ -119,6 +119,19 @@ function CompartilharCartao({ m }: { m: Metricas }) {
     } catch {
       setAviso("Não consegui copiar. Selecione o texto abaixo e copie manualmente.");
     }
+  }
+
+  if (!anonimo) {
+    return (
+      <section className="compartilhar" aria-label="Compartilhar">
+        <h3>Compartilhar</h3>
+        <div className="barra">
+          <button disabled>Gerar imagem</button>
+          <button disabled>Copiar texto</button>
+        </div>
+        <p className="ajuda">Ative o Modo anônimo (no topo da página) para compartilhar.</p>
+      </section>
+    );
   }
 
   return (
@@ -169,7 +182,7 @@ export function MetricasPainel({ anonimo = false }: { anonimo?: boolean }) {
         </section>
       </div>
 
-      {anonimo && <CompartilharCartao m={m} />}
+      <CompartilharCartao m={m} anonimo={anonimo} />
     </div>
   );
 }
