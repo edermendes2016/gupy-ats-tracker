@@ -38,6 +38,9 @@ describe("links de compartilhamento", () => {
 
   it("oferece as redes pedidas", () => {
     expect(links.map((l) => l.id)).toEqual(["linkedin", "x", "facebook", "whatsapp", "telegram", "email"]);
+    expect(links.find((l) => l.id === "linkedin")?.href).toBe(
+      "https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fexemplo.test%2Fapp",
+    );
   });
 
   it("codifica o texto e a URL sem perder conteúdo", () => {
@@ -63,8 +66,15 @@ describe("links de compartilhamento", () => {
     }
   });
 
-  it("sem URL pública, LinkedIn e Facebook somem e as redes de texto continuam", () => {
-    const ids = linksCompartilhamento(texto, null).map((l) => l.id);
-    expect(ids).toEqual(["x", "whatsapp", "telegram", "email"]);
+  it("sem URL pública, Facebook some, mas LinkedIn continua e abre o feed com cópia do texto", () => {
+    const sem = linksCompartilhamento(texto, null);
+    expect(sem.map((l) => l.id)).toEqual(["linkedin", "x", "whatsapp", "telegram", "email"]);
+    const li = sem.find((l) => l.id === "linkedin")!;
+    expect(li.href).toBe("https://www.linkedin.com/feed/?shareActive=true");
+    expect(li.copiarAoClicar).toBe(true);
+  });
+
+  it("só o LinkedIn copia o texto ao clicar", () => {
+    expect(links.filter((l) => l.copiarAoClicar).map((l) => l.id)).toEqual(["linkedin"]);
   });
 });

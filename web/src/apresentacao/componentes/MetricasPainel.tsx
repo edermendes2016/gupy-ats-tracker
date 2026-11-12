@@ -119,10 +119,10 @@ function CompartilharCartao({ m, anonimo }: { m: Metricas; anonimo: boolean }) {
     }
   }
 
-  async function copiar() {
+  async function copiar(mensagem = "Texto copiado.") {
     try {
       await navigator.clipboard.writeText(texto);
-      setAviso("Texto copiado.");
+      setAviso(mensagem);
     } catch {
       setAviso("Não consegui copiar. Selecione o texto abaixo e copie manualmente.");
     }
@@ -170,19 +170,25 @@ function CompartilharCartao({ m, anonimo }: { m: Metricas; anonimo: boolean }) {
       <div className="barra">
         {podeNativo && <button onClick={compartilharNativo}>Compartilhar</button>}
         <button onClick={gerar}>Gerar imagem</button>
-        <button onClick={copiar}>Copiar texto</button>
+        <button onClick={() => copiar()}>Copiar texto</button>
         {png && <a className="botao" href={png.url} download="gupy-tracker-metricas.png">Baixar PNG</a>}
       </div>
       <ul className="redes" aria-label="Compartilhar em redes sociais">
         {links.map((l) => (
           <li key={l.id}>
-            <a className="botao" href={l.href} target="_blank" rel="noopener noreferrer">{l.nome}</a>
+            <a
+              className="botao"
+              href={l.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={l.copiarAoClicar ? () => copiar("Texto copiado. Cole no post do LinkedIn.") : undefined}
+            >
+              {l.nome}
+            </a>
           </li>
         ))}
       </ul>
-      {links.some((l) => l.id === "linkedin") && (
-        <p className="ajuda">No LinkedIn o texto não vai pré-preenchido: use “Copiar texto” e cole na publicação.</p>
-      )}
+      <p className="ajuda">No LinkedIn o texto não vai pré-preenchido: ao clicar, ele é copiado. Cole na publicação e, se quiser, anexe a imagem (Gerar imagem → Baixar PNG).</p>
       {aviso && <p role="status" className="ajuda">{aviso}</p>}
       {png && <img src={png.url} alt="Cartão com as métricas anônimas" className="previa-cartao" />}
       <pre className="texto-cartao">{texto}</pre>
