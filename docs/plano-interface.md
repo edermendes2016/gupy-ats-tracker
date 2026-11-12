@@ -1,6 +1,6 @@
 # Plano: interface React com TypeScript e comunicação gRPC
 
-> Status: **proposta para aprovação**. Nenhum código foi escrito ainda. Este documento descreve a arquitetura, o contrato e as etapas; a implementação começa só depois da aprovação.
+> Status: **aprovado nas decisões D1, D2 e D3; aguardando autorização para a Etapa 1**. Nenhum código foi escrito ainda. Este documento descreve a arquitetura, o contrato e as etapas; a implementação começa só depois da aprovação.
 
 ## 1. Resposta curta
 
@@ -17,7 +17,15 @@ Por isso a arquitetura proposta usa gRPC em dois pontos, com protocolos diferent
 
 Se você quiser uma opção sem gateway, existe também o **Connect** (`connect-es` no front, `connectrpc` no servidor). Ele fala um protocolo compatível com gRPC sobre HTTP/1.1 e HTTP/2 e funciona direto no navegador, sem Envoy. É a opção que recomendo se quisermos que o navegador conversar com o contrato `.proto` diretamente. Veja a decisão D1.
 
-## 2. Decisões que precisam de você
+## 2. Decisões
+
+**Decididas (aprovadas pelo dono do projeto):**
+- **D1: A.** REST/JSON simples entre o React e o BFF. Connect fica como possibilidade futura.
+- **D2: sim.** `grpcio` vai como extra opcional; o núcleo `gupy_tracker/` continua sem dependências.
+- **D3: só local.** Sem deploy público.
+
+As opções abaixo ficam como registro do raciocínio.
+
 
 **D1. Como o navegador conversa com o backend?**
 - A (recomendada): BFF TypeScript com REST/JSON simples. Menos peças, mais fácil de estudar.
