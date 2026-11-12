@@ -53,3 +53,7 @@ venv/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Código Protobuf gerado (scripts/gerar_proto.sh)
+gupy_tracker/v1/*_pb2.py
+gupy_tracker/v1/*_pb2_grpc.py
