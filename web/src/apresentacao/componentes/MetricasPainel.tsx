@@ -16,11 +16,11 @@ import { gerarPng } from "../cartao/png";
 
 const pct = (parte: number, todo: number) => (todo ? Math.round((100 * parte) / todo) : 0);
 
-function Barras({ itens, rotulo, vazio }: { itens: Array<{ nome: string; valor: number }>; rotulo: string; vazio: string }) {
+function Barras({ itens, rotulo, vazio, tom }: { itens: Array<{ nome: string; valor: number }>; rotulo: string; vazio: string; tom?: "forte" | "lacuna" }) {
   if (!itens.length) return <p className="ajuda">{vazio}</p>;
   const max = Math.max(...itens.map((i) => i.valor), 1);
   return (
-    <ul className="barras" aria-label={rotulo}>
+    <ul className={`barras${tom ? ` barras-${tom}` : ""}`} aria-label={rotulo}>
       {itens.map((i) => (
         <li key={i.nome}>
           <span className="barra-rotulo">{i.nome}</span>
@@ -281,12 +281,12 @@ export function MetricasPainel({ anonimo = false }: { anonimo?: boolean }) {
         <section aria-label="Pontos fortes">
           <h3>Pontos fortes</h3>
           <p className="ajuda">Palavras-chave do currículo que aparecem nas vagas.</p>
-          <Barras itens={paraItens(m.pontosFortes)} rotulo="Pontos fortes" vazio="Ainda sem termos em comum." />
+          <Barras itens={paraItens(m.pontosFortes)} rotulo="Pontos fortes" vazio="Ainda sem termos em comum." tom="forte" />
         </section>
         <section aria-label="Lacunas">
           <h3>Lacunas para estudar</h3>
           <p className="ajuda">Termos pedidos nas vagas que faltam no currículo.</p>
-          <Barras itens={paraItens(m.lacunas)} rotulo="Lacunas" vazio="Nenhuma lacuna registrada." />
+          <Barras itens={paraItens(m.lacunas)} rotulo="Lacunas" vazio="Nenhuma lacuna registrada." tom="lacuna" />
         </section>
       </div>
 

@@ -33,13 +33,7 @@ export function App() {
     <div className="app">
       <header className="topo">
         <h1>Gupy Tracker</h1>
-        <label className="alternar">
-          <input type="checkbox" checked={anonimo} onChange={(e) => setAnonimo(e.target.checked)} />
-          Modo anônimo
-        </label>
-      </header>
-
-      <nav className="abas" role="tablist">
+        <nav className="abas" role="tablist">
         {ABAS.map(([id, rotulo]) => (
           <button
             key={id}
@@ -51,7 +45,12 @@ export function App() {
             {rotulo}
           </button>
         ))}
-      </nav>
+        </nav>
+        <label className="alternar">
+          <input type="checkbox" role="switch" checked={anonimo} onChange={(e) => setAnonimo(e.target.checked)} />
+          Modo anônimo
+        </label>
+      </header>
 
       <main className="conteudo">
         {aba === "ranking" && (

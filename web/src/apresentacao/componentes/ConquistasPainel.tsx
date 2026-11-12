@@ -24,6 +24,7 @@ export function ConquistasPainel({ anonimo }: { anonimo: boolean }) {
           <li key={c.id} className={c.desbloqueada ? "conquista desbloqueada" : "conquista bloqueada"}>
             <div className="conquista-cabeca">
               <h4>{c.titulo}</h4>
+              {!c.desbloqueada && <span className="cadeado" aria-hidden="true">🔒</span>}
               <span className="conquista-selo">{c.desbloqueada ? "Desbloqueada" : "Bloqueada"}</span>
             </div>
             {c.detalhe && <p className="conquista-detalhe">{c.detalhe}</p>}
