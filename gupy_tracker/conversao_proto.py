@@ -1,6 +1,6 @@
 """Conversão entre o dicionário da vaga (JSON) e as mensagens Protobuf.
 
-Requer o código gerado (scripts/gerar_proto.sh) e o extra grpc instalado.
+Requer o código gerado (scripts/gerar_proto.py) e o extra grpc instalado.
 O Match Score e a classificação são calculados aqui, no servidor.
 """
 from __future__ import annotations
@@ -24,6 +24,11 @@ def _nome(enum, valor: int, prefixo: str) -> str | None:
     if nome.endswith("DESCONHECIDO") or nome.endswith("NAO_INFORMADO") or nome.endswith("NAO_INFORMADA"):
         return None
     return nome[len(prefixo) + 1:].lower()
+
+
+def status_do_proto(valor: int) -> str:
+    """Enum de status (número do proto) -> texto do domínio, como 'entrevista'."""
+    return pb.Status.Name(valor)[len("STATUS_"):].lower()
 
 
 def vaga_para_proto(vaga: dict, *, detalhe: bool) -> pb.Vaga:
