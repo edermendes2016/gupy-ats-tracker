@@ -3,28 +3,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
-import unicodedata
 from datetime import date
 from pathlib import Path
 
-from . import armazenamento, planilha, relatorio, vazamento
-from .modelo import (AREAS, CORTE_VIABILIDADE, PESOS, SENIORIDADES, STATUS,
-                     calcular_match_score, classificar, validar_vaga)
-
-
-def _slug(texto: str) -> str:
-    sem_acento = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode()
-    return re.sub(r"[^a-z0-9]+", "-", sem_acento.lower()).strip("-")
-
-
-def _achar(vagas: list[dict], id_vaga: str) -> dict:
-    candidatas = [v for v in vagas if v["id"] == id_vaga] or [v for v in vagas if id_vaga in v["id"]]
-    if len(candidatas) != 1:
-        motivo = "não encontrada" if not candidatas else "ambígua: " + ", ".join(v["id"] for v in candidatas)
-        raise SystemExit(f"vaga '{id_vaga}' {motivo}")
-    return candidatas[0]
+from . import armazenamento, casos_de_uso, planilha, relatorio, vazamento
+from .modelo import AREAS, CORTE_VIABILIDADE, PESOS, SENIORIDADES, STATUS
 
 
 def _texto(valor: str | None) -> str | None:
@@ -37,49 +21,47 @@ def _texto(valor: str | None) -> str | None:
 def cmd_adicionar(args, caminho: Path) -> int:
     vagas = armazenamento.carregar(caminho)
     criterios = {nome: getattr(args, nome) for nome in PESOS}
-    if args.curriculo == "outro" and not args.nome_curriculo:
+    try:
+        vaga = casos_de_uso.registrar_vaga(
+            vagas,
+            data=args.data,
+            empresa=args.empresa,
+            cargo=args.cargo,
+            criterios=criterios,
+            senioridade=args.senioridade,
+            area=args.area,
+            modelo=args.modelo,
+            url=args.url,
+            status=args.status,
+            palavras_chave=args.palavra_chave,
+            lacunas=args.lacuna,
+            fonte=args.fonte,
+            curriculo=args.curriculo,
+            nome_curriculo=args.nome_curriculo,
+            descricao=_texto(args.descricao),
+            responsabilidades=_texto(args.responsabilidades),
+            requisitos=_texto(args.requisitos),
+        )
+    except casos_de_uso.CurriculoSemNome:
         raise SystemExit("erro: com --curriculo outro, informe o nome do arquivo com --nome-curriculo")
-    vaga = {
-        "id": f"{args.data}-{_slug(args.empresa)}-{_slug(args.cargo)}",
-        "data": args.data,
-        "empresa": args.empresa,
-        "cargo": args.cargo,
-        "senioridade": args.senioridade,
-        "area": args.area,
-        "modelo": args.modelo,
-        "url": args.url,
-        "status": args.status,
-        "criterios": criterios,
-        "palavras_chave": args.palavra_chave or [],
-        "lacunas": args.lacuna or [],
-        "fonte": args.fonte,
-        "curriculo": args.curriculo,
-        "nome_curriculo": args.nome_curriculo,
-        "descricao": _texto(args.descricao),
-        "responsabilidades": _texto(args.responsabilidades),
-        "requisitos": _texto(args.requisitos),
-        "historico": [{"data": args.data, "status": args.status}],
-    }
-    vaga = {k: v for k, v in vaga.items() if v not in (None, "")}
-    erros = validar_vaga(vaga)
-    if erros:
-        raise SystemExit("vaga inválida: " + "; ".join(erros))
-    if any(v["id"] == vaga["id"] for v in vagas):
-        raise SystemExit(f"já existe uma vaga com id {vaga['id']}")
-    vagas.append(vaga)
+    except casos_de_uso.VagaInvalida as e:
+        raise SystemExit(f"vaga inválida: {e}")
+    except casos_de_uso.VagaDuplicada as e:
+        raise SystemExit(str(e))
     armazenamento.salvar(caminho, vagas)
-    score = calcular_match_score(criterios)
-    print(f"{vaga['id']}: Match Score {score}% ({classificar(score)})")
-    if score < CORTE_VIABILIDADE:
+    score, classe, abaixo_do_corte = casos_de_uso.resumo_score(criterios)
+    print(f"{vaga['id']}: Match Score {score}% ({classe})")
+    if abaixo_do_corte:
         print(f"Abaixo do corte de {CORTE_VIABILIDADE}%: não vale o esforço.")
     return 0
 
 
 def cmd_status(args, caminho: Path) -> int:
     vagas = armazenamento.carregar(caminho)
-    vaga = _achar(vagas, args.id)
-    vaga["status"] = args.novo_status
-    vaga.setdefault("historico", []).append({"data": args.data, "status": args.novo_status})
+    try:
+        vaga = casos_de_uso.atualizar_status(vagas, args.id, args.novo_status, args.data)
+    except casos_de_uso.VagaNaoEncontrada as e:
+        raise SystemExit(str(e))
     armazenamento.salvar(caminho, vagas)
     print(f"{vaga['id']}: {args.novo_status}")
     return 0
