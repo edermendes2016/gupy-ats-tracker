@@ -126,6 +126,8 @@ button:disabled { opacity: 0.6; cursor: default; }
   .barras li { grid-template-columns: minmax(0, 1fr) 3ch; }
   .barra-trilho { grid-column: 1 / -1; grid-row: 2; }
   .barra-numero { grid-row: 1; grid-column: 2; }
+}
+
 /* Aba Aventura */
 .aventura .aventura-cartao {
   background: #fff; border: 1px solid #e3e6ee; border-radius: 14px; padding: 20px; margin: 12px 0 20px;
