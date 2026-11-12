@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { linksCompartilhamento, montarCartao, textoCartao, urlPublica } from "../src/dominio/cartao";
+import { CHAMADA_CARTAO, REPOSITORIO_URL, linksCompartilhamento, montarCartao, textoCartao, urlPublica } from "../src/dominio/cartao";
 import type { Metricas } from "../src/dominio/tipos";
 
 const METRICAS: Metricas = {
@@ -19,16 +19,26 @@ describe("cartão de compartilhamento", () => {
     const c = montarCartao(METRICAS);
     expect(c.indicadores.find((i) => i.rotulo === "conversão em entrevista")?.valor).toBe("33%");
     expect(c.pontosFortes).toHaveLength(5);
-    expect(c.pontosFortes[0]).toBe("Python");
-    expect(c.lacunas).toEqual(["Kubernetes"]);
+    expect(c.pontosFortes[0]).toEqual({ nome: "Python", valor: 7 });
+    expect(c.lacunas).toEqual([{ nome: "Kubernetes", valor: 5 }]);
   });
 
-  it("não contém empresa, link, id nem data completa", () => {
+  it("funil só traz etapas com vagas, na ordem do fluxo", () => {
+    const c = montarCartao(METRICAS);
+    expect(c.funil).toEqual([{ nome: "Entrevista", valor: 2 }]);
+  });
+
+  it("não contém empresa, link de vaga, id nem data completa", () => {
     const texto = textoCartao(montarCartao({ ...METRICAS }));
-    expect(texto).not.toMatch(/https?:\/\//);
     expect(texto).not.toMatch(/\d{4}-\d{2}-\d{2}/);
     expect(texto).not.toMatch(/Empresa|gupy\.io/i);
     expect(texto).toContain("Pontos fortes: Python");
+  });
+
+  it("termina com o convite para começar pelo repositório, e só ele é link", () => {
+    const texto = textoCartao(montarCartao({ ...METRICAS }));
+    expect(texto).toContain(`${CHAMADA_CARTAO}: ${REPOSITORIO_URL}`);
+    expect(texto.match(/https?:\/\//g)).toHaveLength(1);
   });
 });
 

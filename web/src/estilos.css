@@ -115,8 +115,9 @@ button:disabled { opacity: 0.6; cursor: default; }
 .compartilhar { border-top: 1px solid var(--borda); padding-top: 16px; }
 .compartilhar .barra { margin-bottom: 12px; }
 .compartilhar .botao { display: inline-block; padding: 6px 12px; border: 1px solid var(--borda); border-radius: 8px; color: var(--texto); text-decoration: none; background: var(--fundo); }
+.compartilhar .botao-principal { background: #2a78d6; border-color: #2a78d6; color: #fff; font-weight: 600; }
 .redes { list-style: none; margin: 0 0 6px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.previa-cartao { display: block; width: 100%; max-width: 360px; height: auto; border: 1px solid var(--borda); border-radius: 10px; margin: 12px 0; }
+.previa-cartao { display: block; width: 100%; max-width: 720px; height: auto; border: 1px solid var(--borda); border-radius: 10px; margin: 12px 0; }
 .texto-cartao { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--fundo); border: 1px solid var(--borda); border-radius: 8px; padding: 12px; margin: 12px 0 0; font: inherit; font-size: 0.92rem; }
 @media (max-width: 600px) {
   .grade-painel { grid-template-columns: 1fr; }
