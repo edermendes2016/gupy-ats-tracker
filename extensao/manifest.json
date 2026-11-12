@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Gupy Tracker: leitura de etapas",
+  "version": "0.1.0",
+  "description": "Lê o progresso das suas candidaturas na página Minhas candidaturas, só quando você clica, e envia para o tracker local.",
+  "permissions": [],
+  "host_permissions": ["https://portal.gupy.io/my/applications*", "http://127.0.0.1/*", "http://localhost/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://portal.gupy.io/my/applications*"],
+      "js": ["leitor.js", "conteudo.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": { "default_popup": "popup.html", "default_title": "Gupy Tracker" }
+}

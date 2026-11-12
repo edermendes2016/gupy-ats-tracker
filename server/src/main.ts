@@ -6,6 +6,7 @@ import { criarRepositoriosGrpc } from "./infraestrutura/grpc/clientes.js";
 import { criarApp } from "./apresentacao/http/app.js";
 import { escolherXlsxWindows } from "./infraestrutura/seletor.js";
 import { registrarEstaticos } from "./apresentacao/http/estaticos.js";
+import { criarProgressoArquivo } from "./infraestrutura/progresso/arquivo.js";
 
 const HOST = process.env.HOST ?? "127.0.0.1";
 const PORT = Number(process.env.PORT ?? 3000);
@@ -17,6 +18,7 @@ const casos = criarCasosDeUso({
   ranking: repos.ranking,
   planilha: repos.planilha,
   analise: repos.analise,
+  progresso: criarProgressoArquivo(process.env.GUPY_TRACKER_PROGRESSO ?? "private/progresso.json"),
 });
 const app = criarApp(casos, {
   logger: true,

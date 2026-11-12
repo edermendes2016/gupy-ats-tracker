@@ -39,4 +39,5 @@ Para começar: `git clone` do repositório, entrar na pasta e rodar `python -m g
 - [Metodologia do Match Score](docs/match-score.md): critérios, pesos e faixas
 - [Proteção de dados](docs/protecao-de-dados.md): como os dados pessoais ficam fora do Git
 - [Servidor gRPC](docs/servidor-grpc.md): serviço local opcional
+- [Aviso legal da aba Aventura e da extensão](docs/aviso-legal.md): o que a extensão lê, o que não faz e o risco dos termos da Gupy
 - [Wiki da parte Python](docs/wiki-python/README.md): organização do código e padrões usados

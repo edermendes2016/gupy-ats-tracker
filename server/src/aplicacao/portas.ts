@@ -1,5 +1,6 @@
 // Portas: o que a aplicação precisa do mundo externo. Quem implementa é a infraestrutura.
 import type { Metricas, NovaVaga, Status, Vaga } from "../dominio/vaga.js";
+import type { ProgressoEtapas } from "../dominio/aventura.js";
 
 export interface FiltroVagas {
   status?: Status;
@@ -49,4 +50,10 @@ export interface AnaliseRepositorio {
 export interface PlanilhaRepositorio {
   exportar(caminho: string): Promise<{ novas: number; existentes: number }>;
   gerarModelo(caminho: string): Promise<void>;
+}
+
+/** Progresso das etapas de cada vaga (id -> { atual, total }). Vive fora do serviço Python. */
+export interface ProgressoRepositorio {
+  ler(): Promise<Record<string, ProgressoEtapas>>;
+  salvar(id: string, progresso: ProgressoEtapas): Promise<void>;
 }

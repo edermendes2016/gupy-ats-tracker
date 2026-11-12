@@ -5,13 +5,15 @@ import { DetalheVaga } from "./componentes/DetalheVaga";
 import { FormularioVaga } from "./componentes/FormularioVaga";
 import { MetricasPainel } from "./componentes/MetricasPainel";
 import { ExportarPlanilha } from "./componentes/ExportarPlanilha";
+import { AventuraPainel } from "./componentes/AventuraPainel";
 import { ROTULO_STATUS, STATUS, type Status } from "../dominio/tipos";
 
-type Aba = "ranking" | "vagas" | "metricas" | "nova";
+type Aba = "ranking" | "vagas" | "metricas" | "aventura" | "nova";
 const ABAS: Array<[Aba, string]> = [
   ["ranking", "Ranking"],
   ["vagas", "Vagas"],
   ["metricas", "Métricas"],
+  ["aventura", "Aventura"],
   ["nova", "Nova vaga"],
 ];
 
@@ -83,6 +85,8 @@ export function App() {
         )}
 
         {aba === "metricas" && <MetricasPainel anonimo={anonimo} />}
+
+        {aba === "aventura" && <AventuraPainel anonimo={anonimo} />}
 
         {aba === "nova" && (
           <section aria-label="Nova vaga">
