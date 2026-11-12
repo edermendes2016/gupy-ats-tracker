@@ -73,9 +73,28 @@ export interface NovaVaga {
   requisitos?: string;
 }
 
+export interface Termo {
+  nome: string;
+  vagas: number;
+}
+
+export interface PontoEvolucao {
+  mes: string; // AAAA-MM
+  analisadas: number;
+  enviadas: number;
+  entrevistas: number;
+}
+
 export interface Metricas {
   total: number;
   enviadas: number;
   chegaramEntrevista: number;
   taxaConversao: number;
+  ofertas: number;
+  scoreMedio: number;
+  porStatus: Array<{ status: string; vagas: number }>;
+  faixas: Array<{ faixa: string; enviadas: number; entrevistas: number }>;
+  evolucao: PontoEvolucao[];
+  pontosFortes: Termo[];
+  lacunas: Termo[];
 }

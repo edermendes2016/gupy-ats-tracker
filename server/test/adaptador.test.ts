@@ -39,7 +39,22 @@ describe("adaptador gRPC", () => {
 
   it("converte métricas", () => {
     expect(metricasDoProto({ total: 4, enviadas: 2, chegaram_entrevista: 1, taxa_conversao: 0.5 })).toEqual({
-      total: 4, enviadas: 2, chegaramEntrevista: 1, taxaConversao: 0.5,
+      total: 4, enviadas: 2, chegaramEntrevista: 1, taxaConversao: 0.5, ofertas: 0, scoreMedio: 0,
+      porStatus: [], faixas: [], evolucao: [], pontosFortes: [], lacunas: [],
     });
+  });
+
+  it("converte pontos fortes, lacunas e evolução das métricas", () => {
+    const m = metricasDoProto({
+      total: 2, score_medio: 61, ofertas: 1,
+      por_status: [{ status: "entrevista", vagas: 1 }],
+      evolucao: [{ mes: "2026-02", analisadas: 2, enviadas: 1, entrevistas: 1 }],
+      pontos_fortes: [{ nome: "Python", vagas: 2 }],
+      lacunas: [{ nome: "Docker", vagas: 1 }],
+    });
+    expect(m.scoreMedio).toBe(61);
+    expect(m.evolucao).toEqual([{ mes: "2026-02", analisadas: 2, enviadas: 1, entrevistas: 1 }]);
+    expect(m.pontosFortes).toEqual([{ nome: "Python", vagas: 2 }]);
+    expect(m.lacunas).toEqual([{ nome: "Docker", vagas: 1 }]);
   });
 });
