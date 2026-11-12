@@ -47,6 +47,8 @@ export function traduzirErro(err: grpc.ServiceError): Error {
     case grpc.status.ALREADY_EXISTS:
       return new ErroConflito(detalhe);
     case grpc.status.INVALID_ARGUMENT:
+    case grpc.status.FAILED_PRECONDITION:
+      // Ex.: planilha inexistente ou ilegível. É um problema do pedido, não do servidor.
       return new ErroEntradaInvalida(detalhe);
     case grpc.status.UNAVAILABLE:
     case grpc.status.DEADLINE_EXCEEDED:
