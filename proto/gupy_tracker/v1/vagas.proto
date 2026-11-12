@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+package gupy_tracker.v1;
+
+// Mensagens e serviço de vagas. Espelha STATUS, SENIORIDADES e MODELOS de gupy_tracker/modelo.py.
+// Mantidos em sincronia por teste de contrato na Etapa 3.
+
+enum Status {
+  STATUS_DESCONHECIDO = 0;
+  STATUS_ANALISADA = 1;
+  STATUS_DESCARTADA = 2;
+  STATUS_CANDIDATADA = 3;
+  STATUS_TRIAGEM = 4;
+  STATUS_TESTE = 5;
+  STATUS_ENTREVISTA = 6;
+  STATUS_OFERTA = 7;
+  STATUS_RECUSADA = 8;
+  STATUS_DESISTENCIA = 9;
+}
+
+enum Senioridade {
+  SENIORIDADE_NAO_INFORMADA = 0;
+  SENIORIDADE_JUNIOR = 1;
+  SENIORIDADE_PLENO = 2;
+  SENIORIDADE_SENIOR = 3;
+  SENIORIDADE_ESPECIALISTA = 4;
+}
+
+enum Modelo {
+  MODELO_NAO_INFORMADO = 0;
+  MODELO_REMOTO = 1;
+  MODELO_HIBRIDO = 2;
+  MODELO_PRESENCIAL = 3;
+}
+
+message Criterios {
+  int32 obrigatorios = 1;  // 0-100, peso 50
+  int32 desejaveis = 2;    // 0-100, peso 15
+  int32 experiencia = 3;   // 0-100, peso 15
+  int32 dominio = 4;       // 0-100, peso 10
+  int32 logistica = 5;     // 0-100, peso 10
+}
+
+message Historico {
+  string data = 1;  // ISO 8601 (AAAA-MM-DD)
+  Status status = 2;
+}
+
+message Vaga {
+  string id = 1;
+  string data = 2;                 // ISO 8601 (AAAA-MM-DD)
+  string empresa = 3;
+  string cargo = 4;
+  Senioridade senioridade = 5;
+  string area = 6;                 // dotnet | fullstack | frontend | cloud | devops | outra
+  Modelo modelo = 7;
+  string url = 8;
+  Status status = 9;
+  Criterios criterios = 10;
+  int32 match_score = 11;          // calculado no servidor, nunca no cliente
+  string classificacao = 12;       // "alta aderência", "aposta", ...
+  repeated string palavras_chave = 13;
+  repeated string lacunas = 14;
+  repeated Historico historico = 15;
+  // Campos de texto da Gupy. Ficam de fora das listagens.
+  optional string descricao = 16;
+  optional string responsabilidades = 17;
+  optional string requisitos = 18;
+}
+
+message ListarVagasRequest {
+  optional Status status = 1;  // filtro opcional
+  bool anonimo = 2;            // mascara empresa, id e url
+}
+
+message ListarVagasResponse {
+  repeated Vaga vagas = 1;
+}
+
+message ObterVagaRequest {
+  string id = 1;
+  bool anonimo = 2;            // também mascara id, url e campos de texto
+}
+
+message RegistrarVagaRequest {
+  Vaga vaga = 1;               // id e match_score são ignorados na entrada
+}
+
+message AtualizarStatusRequest {
+  string id = 1;
+  Status novo_status = 2;
+  string data = 3;             // ISO 8601; vazio = hoje, no serviço
+}
+
+service VagasService {
+  rpc ListarVagas(ListarVagasRequest) returns (ListarVagasResponse);
+  rpc ObterVaga(ObterVagaRequest) returns (Vaga);
+  rpc RegistrarVaga(RegistrarVagaRequest) returns (Vaga);
+  rpc AtualizarStatus(AtualizarStatusRequest) returns (Vaga);
+}
