@@ -29,17 +29,35 @@ python -m gupy_tracker ranking
 
 ## Interface web (opcional)
 
-Para quem prefere uma tela. São três processos, todos locais (`127.0.0.1`):
+Precisa de Python 3.10+ e Node 20+. Os comandos funcionam no Windows (cmd, PowerShell ou Git Bash), no macOS e no Linux. Abra três terminais dentro da pasta do projeto.
 
-```bash
-pip install .[grpc]                                   # grpcio e protobuf
-sh scripts/gerar_proto.sh                             # gera gupy_tracker/v1/
-python -m gupy_tracker.servidor_grpc --dados private/vagas.json   # terminal 1: gRPC na porta 50051
+**Terminal 1: serviço Python (gRPC)**
 
-cd server && npm install && npm start                 # terminal 2: BFF em http://127.0.0.1:3000
-
-cd web && npm install && npm run dev                  # terminal 3: interface em http://127.0.0.1:5173
 ```
+python -m pip install ".[grpc]" grpcio-tools
+python scripts/gerar_proto.py
+python -m gupy_tracker.servidor_grpc
+```
+
+O último comando usa `private/vagas.json`. Você não precisa criar a pasta nem o arquivo: eles são criados quando a primeira vaga for salva. Se quiser outro arquivo, use `python -m gupy_tracker.servidor_grpc --dados caminho/do/vagas.json`.
+
+**Terminal 2: BFF (HTTP para a interface)**
+
+```
+cd server
+npm install
+npm start
+```
+
+**Terminal 3: interface**
+
+```
+cd web
+npm install
+npm run dev
+```
+
+Depois, abra http://127.0.0.1:5173 no navegador.
 
 Arquitetura e decisões: [plano da interface](docs/plano-interface.md). Detalhes do servidor: [servidor gRPC](docs/servidor-grpc.md).
 
