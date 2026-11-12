@@ -9,7 +9,12 @@ const PORT = Number(process.env.PORT ?? 3000);
 const GRPC_ENDERECO = process.env.GRPC_ENDERECO ?? "127.0.0.1:50051";
 
 const repos = criarRepositoriosGrpc(GRPC_ENDERECO);
-const casos = criarCasosDeUso({ vagas: repos.vagas, ranking: repos.ranking, planilha: repos.planilha });
+const casos = criarCasosDeUso({
+  vagas: repos.vagas,
+  ranking: repos.ranking,
+  planilha: repos.planilha,
+  analise: repos.analise,
+});
 const app = criarApp(casos, { logger: true });
 
 app.listen({ host: HOST, port: PORT }).catch((erro) => {

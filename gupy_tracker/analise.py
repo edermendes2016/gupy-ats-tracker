@@ -275,6 +275,7 @@ class Analise:
     palavras_chave: list[str]
     lacunas: list[str]
     avisos: list[str]
+    sugestoes: list[str]
     anos_curriculo: float
     anos_pedidos: float | None
 
@@ -336,6 +337,17 @@ def analisar(
         if t in (obrigatorias | desejaveis) and cobertura.get(t, 0) < 1:
             lacunas.append(t + (" (só estudo ou certificação)" if cobertura.get(t, 0) else ""))
 
+    sugestoes = []
+    for t in TECNOLOGIAS:
+        if t not in (obrigatorias | desejaveis):
+            continue
+        if cobertura.get(t, 0) == 0:
+            sugestoes.append(f"{t} está na vaga e não aparece no currículo. Se você já usou, cite-o numa experiência real; se não, é um gap para estudar.")
+        elif cobertura[t] < 1:
+            sugestoes.append(f"{t} aparece só como estudo ou certificação. Se houve prática, descreva-a numa experiência.")
+    if pedido and tempo < pedido:
+        sugestoes.append(f"A vaga pede {pedido:g} anos e o currículo soma {tempo:g} anos pelos períodos. Confira se os períodos de cada experiência estão completos.")
+
     score = calcular_match_score(criterios)
     return Analise(
         criterios=criterios,
@@ -344,6 +356,7 @@ def analisar(
         palavras_chave=palavras,
         lacunas=lacunas,
         avisos=avisos,
+        sugestoes=sugestoes,
         anos_curriculo=tempo,
         anos_pedidos=pedido,
     )
