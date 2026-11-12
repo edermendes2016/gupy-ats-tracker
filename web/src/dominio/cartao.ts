@@ -68,8 +68,11 @@ export interface LinkRede {
   id: string;
   nome: string;
   href: string;
-  /** Copia o texto do cartão ao clicar (LinkedIn não aceita texto pré-preenchido). */
-  copiarAoClicar?: boolean;
+  /**
+   * Ao clicar, a imagem do cartão vai para a área de transferência (ou é baixada, se o navegador
+   * não deixar copiar). Redes não recebem imagem por link, então a pessoa cola no post.
+   */
+  anexaImagem?: boolean;
 }
 
 const LINKEDIN_FEED = "https://www.linkedin.com/feed/?shareActive=true";
@@ -77,8 +80,9 @@ const LINKEDIN_FEED = "https://www.linkedin.com/feed/?shareActive=true";
 /**
  * Links de compartilhamento para as principais redes. Recebem só o texto do cartão e a
  * URL pública da página (sem query nem hash). LinkedIn aparece sempre: sem URL pública
- * (instalação local) abre o feed, e o clique copia o texto para colar na publicação.
+ * (instalação local) abre o feed, e o clique copia a imagem para colar na publicação.
  * Facebook só aparece com URL pública, porque só compartilha um link.
+ * E-mail não recebe imagem, então leva só o texto.
  */
 export function linksCompartilhamento(texto: string, url: string | null): LinkRede[] {
   const t = encodeURIComponent(texto);
@@ -87,18 +91,24 @@ export function linksCompartilhamento(texto: string, url: string | null): LinkRe
       id: "linkedin",
       nome: "LinkedIn",
       href: url ? `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}` : LINKEDIN_FEED,
-      copiarAoClicar: true,
+      anexaImagem: true,
     },
   ];
-  links.push({ id: "x", nome: "X", href: `https://x.com/intent/post?text=${t}` });
+  links.push({ id: "x", nome: "X", href: `https://x.com/intent/post?text=${t}`, anexaImagem: true });
   if (url) {
-    links.push({ id: "facebook", nome: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}` });
+    links.push({
+      id: "facebook",
+      nome: "Facebook",
+      href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+      anexaImagem: true,
+    });
   }
-  links.push({ id: "whatsapp", nome: "WhatsApp", href: `https://wa.me/?text=${t}` });
+  links.push({ id: "whatsapp", nome: "WhatsApp", href: `https://wa.me/?text=${t}`, anexaImagem: true });
   links.push({
     id: "telegram",
     nome: "Telegram",
     href: url ? `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${t}` : `https://t.me/share/url?text=${t}`,
+    anexaImagem: true,
   });
   links.push({ id: "email", nome: "E-mail", href: `mailto:?subject=${encodeURIComponent(ASSUNTO_CARTAO)}&body=${t}` });
   return links;

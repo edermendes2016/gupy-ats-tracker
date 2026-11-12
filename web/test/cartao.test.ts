@@ -88,15 +88,16 @@ describe("links de compartilhamento", () => {
     }
   });
 
-  it("sem URL pública, Facebook some, mas LinkedIn continua e abre o feed com cópia do texto", () => {
+  it("sem URL pública, Facebook some, mas LinkedIn continua e abre o feed com envio da imagem", () => {
     const sem = linksCompartilhamento(texto, null);
     expect(sem.map((l) => l.id)).toEqual(["linkedin", "x", "whatsapp", "telegram", "email"]);
     const li = sem.find((l) => l.id === "linkedin")!;
     expect(li.href).toBe("https://www.linkedin.com/feed/?shareActive=true");
-    expect(li.copiarAoClicar).toBe(true);
+    expect(li.anexaImagem).toBe(true);
   });
 
-  it("só o LinkedIn copia o texto ao clicar", () => {
-    expect(links.filter((l) => l.copiarAoClicar).map((l) => l.id)).toEqual(["linkedin"]);
+  it("as redes sociais enviam a imagem ao clicar; e-mail só leva o texto", () => {
+    expect(links.filter((l) => l.anexaImagem).map((l) => l.id)).toEqual(["linkedin", "x", "facebook", "whatsapp", "telegram"]);
+    expect(links.find((l) => l.id === "email")?.anexaImagem).toBeFalsy();
   });
 });

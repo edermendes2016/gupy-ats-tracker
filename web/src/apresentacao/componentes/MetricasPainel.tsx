@@ -11,6 +11,7 @@ import {
   montarCartao,
   textoCartao,
   urlPublica,
+  type LinkRede,
 } from "../../dominio/cartao";
 import { gerarPng } from "../cartao/png";
 
@@ -104,6 +105,17 @@ function Evolucao({ m }: { m: Metricas }) {
 
 const paraItens = (t: Termo[]) => t.map((x) => ({ nome: x.nome, valor: x.vagas }));
 
+function baixarArquivo(blob: Blob) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "gupy-tracker-metricas.png";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 function CompartilharCartao({ m, anonimo }: { m: Metricas; anonimo: boolean }) {
   const [png, setPng] = useState<{ url: string; blob: Blob } | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -145,6 +157,41 @@ function CompartilharCartao({ m, anonimo }: { m: Metricas; anonimo: boolean }) {
       setAviso(mensagem);
     } catch {
       setAviso("Não consegui copiar. Selecione o texto abaixo e copie manualmente.");
+    }
+  }
+
+  // Coloca a imagem na área de transferência, com o texto junto quando o navegador aceita.
+  // Devolve false se nenhuma forma funcionar, para o chamador oferecer o download.
+  async function copiarImagem(blob: Blob): Promise<boolean> {
+    if (typeof ClipboardItem === "undefined" || !navigator.clipboard?.write) return false;
+    const formas: Array<Record<string, Blob>> = [
+      { "image/png": blob, "text/plain": new Blob([texto], { type: "text/plain" }) },
+      { "image/png": blob },
+    ];
+    for (const forma of formas) {
+      try {
+        await navigator.clipboard.write([new ClipboardItem(forma)]);
+        return true;
+      } catch {
+        // Tenta a forma seguinte: só a imagem.
+      }
+    }
+    return false;
+  }
+
+  // Clique numa rede: o link abre a rede normalmente, e a imagem segue para a área de transferência.
+  async function aoCompartilharRede(rede: LinkRede) {
+    setAviso(null);
+    const blob = png?.blob ?? (await gerarPng(cartao).catch(() => null));
+    if (!blob) {
+      setAviso(`Não consegui gerar a imagem. Use o texto abaixo no ${rede.nome}.`);
+      return;
+    }
+    if (await copiarImagem(blob)) {
+      setAviso(`Imagem copiada: cole (Ctrl+V) na publicação do ${rede.nome}.`);
+    } else {
+      baixarArquivo(blob);
+      setAviso(`Não consegui copiar a imagem, então ela foi baixada. Anexe pelo ícone de mídia do ${rede.nome}.`);
     }
   }
 
@@ -203,14 +250,16 @@ function CompartilharCartao({ m, anonimo }: { m: Metricas; anonimo: boolean }) {
               href={l.href}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={l.copiarAoClicar ? () => copiar("Texto copiado. Cole no post do LinkedIn.") : undefined}
+              onClick={l.anexaImagem ? () => aoCompartilharRede(l) : undefined}
             >
               {l.nome}
             </a>
           </li>
         ))}
       </ul>
-      <p className="ajuda">No LinkedIn o texto não vai pré-preenchido: ao clicar, ele é copiado. Cole na publicação e, se quiser, anexe a imagem (Baixar imagem).</p>
+      <p className="ajuda">
+        Nas redes, o clique abre a publicação e copia a imagem do cartão: é só colar (Ctrl+V). Se o navegador não copiar, a imagem é baixada e você anexa pelo ícone de mídia. No LinkedIn, o texto também vai junto. Por e-mail, vai só o texto.
+      </p>
       {aviso && <p role="status" className="ajuda">{aviso}</p>}
       <pre className="texto-cartao">{texto}</pre>
     </section>
