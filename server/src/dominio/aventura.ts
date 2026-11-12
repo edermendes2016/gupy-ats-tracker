@@ -4,8 +4,9 @@
 //   2. Etapas concluídas de um processo seletivo, informadas pela extensão ou à mão.
 import type { HistoricoItem, Status, Vaga } from "./vaga.js";
 
-/** XP por dia parado em cada etapa. Descartada, recusada, desistência e analisada não rendem. */
+/** XP por dia parado em cada etapa. Descartada, recusada e desistência não rendem. */
 export const XP_POR_DIA: Partial<Record<Status, number>> = {
+  analisada: 1,
   candidatada: 2,
   triagem: 3,
   teste: 4,
@@ -66,14 +67,23 @@ function diasEntre(inicio: string, fim: string): number {
   return Math.max(0, Math.round((b - a) / DIA_MS));
 }
 
-/** XP acumulado por tempo em cada etapa do histórico. `hoje` fecha a etapa atual. */
+function somarDias(data: string, dias: number): string {
+  const t = Date.parse(`${data}T00:00:00Z`);
+  if (Number.isNaN(t)) return data;
+  return new Date(t + dias * DIA_MS).toISOString().slice(0, 10);
+}
+
+/**
+ * XP acumulado por tempo em cada etapa do histórico. Cada etapa conta até a data da
+ * próxima mudança; a etapa atual conta até hoje, incluindo o próprio dia.
+ */
 export function xpPorTempo(historico: HistoricoItem[], hoje: string): number {
   const ordenado = [...historico].sort((x, y) => x.data.localeCompare(y.data));
   let xp = 0;
   ordenado.forEach((item, i) => {
     const taxa = XP_POR_DIA[item.status] ?? 0;
     if (!taxa) return;
-    const fim = ordenado[i + 1]?.data ?? hoje;
+    const fim = ordenado[i + 1]?.data ?? somarDias(hoje, 1);
     const dias = Math.min(diasEntre(item.data, fim), TETO_DIAS_POR_ETAPA);
     xp += dias * taxa;
   });
@@ -87,8 +97,14 @@ export function xpPorEtapas(progresso: ProgressoEtapas): number {
   return atual * (XP_BASE_ETAPA + XP_POR_ETAPA_DO_PROCESSO * total);
 }
 
+/** Sem histórico gravado, a vaga conta desde a data em que foi cadastrada, no status atual. */
+export function historicoEfetivo(vaga: Vaga): HistoricoItem[] {
+  if (vaga.historico.length > 0) return vaga.historico;
+  return [{ data: vaga.data, status: vaga.status }];
+}
+
 export function xpDaVaga(vaga: Vaga, hoje: string, progresso?: ProgressoEtapas): number {
-  return xpPorTempo(vaga.historico, hoje) + (progresso ? xpPorEtapas(progresso) : 0);
+  return xpPorTempo(historicoEfetivo(vaga), hoje) + (progresso ? xpPorEtapas(progresso) : 0);
 }
 
 export function nivelDoXp(xp: number): number {
@@ -121,6 +137,6 @@ export function montarAventura(
     xp,
     xpNivelAtual: XP_BASE_NIVEL * (nivel - 1) ** 2,
     xpProximoNivel: XP_BASE_NIVEL * nivel ** 2,
-    vagas: anonimo ? [] : itens.filter((i) => i.xp > 0).sort((a, b) => b.xp - a.xp),
+    vagas: anonimo ? [] : itens.sort((a, b) => b.xp - a.xp || a.empresa.localeCompare(b.empresa)),
   };
 }
