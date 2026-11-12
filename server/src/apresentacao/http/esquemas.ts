@@ -48,4 +48,13 @@ export const ExportarPlanilhaBody = z.object({
   caminho: z.string().min(1),
 });
 
+export const AnalisarBody = z.object({
+  nomeArquivo: z.string().min(1),
+  arquivoBase64: z.string().min(1),
+  descricao: z.string().optional(),
+  responsabilidades: z.string().optional(),
+  requisitos: z.string().optional(),
+  modelo: z.enum(MODELOS).optional(),
+});
+
 export const IdParams = z.object({ id: z.string().min(1) });

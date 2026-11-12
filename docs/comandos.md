@@ -5,6 +5,7 @@ Todos são executados da raiz do projeto, no formato `python -m gupy_tracker <co
 | Comando | O que faz |
 |---------|-----------|
 | `adicionar` | Registra uma vaga analisada e mostra o Match Score |
+| `analisar --cv arquivo` | Calcula os cinco critérios, o Match Score, as palavras-chave e as lacunas a partir do texto da vaga e do currículo (`--salvar --empresa --cargo` registra a vaga) |
 | `status <id> <novo_status>` | Atualiza o status de uma vaga (aceita um trecho do id) |
 | `ranking` | Mostra o ranking no terminal (`--anonimo` esconde os nomes; `--planilha` preenche a planilha de controle) |
 | `metricas` | Funil e taxa de conversão em JSON |

@@ -1,5 +1,5 @@
 // Cliente HTTP do BFF. Única parte da interface que sabe as URLs.
-import type { Metricas, NovaVaga, Status, Vaga } from "../../dominio/tipos";
+import type { EntradaAnalise, Metricas, NovaVaga, ResultadoAnalise, Status, Vaga } from "../../dominio/tipos";
 
 export class ErroApi extends Error {
   constructor(
@@ -53,6 +53,9 @@ export const api = {
     requisitar<Vaga[]>(`/api/ranking${query({ anonimo: anonimo ? "true" : undefined })}`),
 
   metricas: () => requisitar<Metricas>("/api/metricas"),
+
+  analisarCurriculo: (entrada: EntradaAnalise) =>
+    requisitar<ResultadoAnalise>("/api/analises", { method: "POST", body: JSON.stringify(entrada) }),
 
   exportarPlanilha: (caminho: string) =>
     requisitar<{ novas: number; existentes: number }>("/api/planilha", {

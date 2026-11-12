@@ -10,7 +10,12 @@ import {
   ErroIndisponivel,
   ErroNaoEncontrada,
 } from "../../aplicacao/erros.js";
-import type { PlanilhaRepositorio, RankingRepositorio, VagaRepositorio } from "../../aplicacao/portas.js";
+import type {
+  AnaliseRepositorio,
+  PlanilhaRepositorio,
+  RankingRepositorio,
+  VagaRepositorio,
+} from "../../aplicacao/portas.js";
 import {
   metricasDoProto,
   novaVagaParaProto,
@@ -23,6 +28,7 @@ const ARQUIVOS = [
   "gupy_tracker/v1/vagas.proto",
   "gupy_tracker/v1/ranking.proto",
   "gupy_tracker/v1/planilha.proto",
+  "gupy_tracker/v1/analise.proto",
 ];
 const PRAZO_MS = 5000;
 
@@ -36,7 +42,7 @@ const pacote = grpc.loadPackageDefinition(
   }),
 ) as unknown as { gupy_tracker: { v1: Record<string, any> } };
 
-const { VagasService, RankingService, PlanilhaService } = pacote.gupy_tracker.v1;
+const { VagasService, RankingService, PlanilhaService, AnaliseService } = pacote.gupy_tracker.v1;
 
 /** Traduz códigos gRPC em erros da aplicação. */
 export function traduzirErro(err: grpc.ServiceError): Error {
@@ -76,6 +82,7 @@ export interface Repositorios {
   vagas: VagaRepositorio;
   ranking: RankingRepositorio;
   planilha: PlanilhaRepositorio;
+  analise: AnaliseRepositorio;
   fechar(): void;
 }
 
@@ -85,6 +92,7 @@ export function criarRepositoriosGrpc(endereco: string): Repositorios {
   const vagasCli = new VagasService(endereco, credenciais);
   const rankingCli = new RankingService(endereco, credenciais);
   const planilhaCli = new PlanilhaService(endereco, credenciais);
+  const analiseCli = new AnaliseService(endereco, credenciais);
 
   const vagas: VagaRepositorio = {
     async listar(filtro) {
@@ -128,12 +136,44 @@ export function criarRepositoriosGrpc(endereco: string): Repositorios {
     },
   };
 
+  const analise: AnaliseRepositorio = {
+    async analisar(e) {
+      const res = await chamar<Record<string, any>>(analiseCli, "Analisar", {
+        curriculo: e.curriculo,
+        nome_arquivo: e.nomeArquivo,
+        descricao: e.descricao ?? "",
+        responsabilidades: e.responsabilidades ?? "",
+        requisitos: e.requisitos ?? "",
+        modelo: e.modelo ?? "",
+      });
+      const anosPedidos = Number(res.anos_pedidos);
+      return {
+        criterios: {
+          obrigatorios: Number(res.criterios.obrigatorios),
+          desejaveis: Number(res.criterios.desejaveis),
+          experiencia: Number(res.criterios.experiencia),
+          dominio: Number(res.criterios.dominio),
+          logistica: Number(res.criterios.logistica),
+        },
+        matchScore: Number(res.match_score),
+        classificacao: res.classificacao,
+        palavrasChave: res.palavras_chave ?? [],
+        lacunas: res.lacunas ?? [],
+        avisos: res.avisos ?? [],
+        sugestoes: res.sugestoes ?? [],
+        anosCurriculo: Number(res.anos_curriculo),
+        anosPedidos: anosPedidos > 0 ? anosPedidos : null,
+      };
+    },
+  };
+
   return {
     vagas,
     ranking,
     planilha,
+    analise,
     fechar() {
-      for (const c of [vagasCli, rankingCli, planilhaCli]) c.close();
+      for (const c of [vagasCli, rankingCli, planilhaCli, analiseCli]) c.close();
     },
   };
 }
