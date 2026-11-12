@@ -27,7 +27,17 @@ cd gupy-ats-tracker
 python -m gupy_tracker ranking
 ```
 
-## Interface web (opcional)
+## Interface web com Docker (recomendado)
+
+Com Docker instalado, um comando sobe tudo (serviço gRPC, BFF e interface):
+
+```
+docker compose up --build
+```
+
+Abra http://127.0.0.1:3000. Detalhes, Windows e onde ficam os dados: [Rodar com Docker](docs/docker.md).
+
+## Interface web sem Docker (opcional)
 
 Precisa de Python 3.10+ e Node 20+. Os comandos funcionam no Windows (cmd, PowerShell ou Git Bash), no macOS e no Linux. Abra três terminais dentro da pasta do projeto.
 
@@ -64,6 +74,7 @@ Arquitetura e decisões: [plano da interface](docs/plano-interface.md). Detalhes
 ## Documentação
 
 - [Como usar](docs/como-usar.md): passo a passo, do download ao primeiro ranking
+- [Rodar com Docker](docs/docker.md): um comando sobe tudo, Windows incluso
 - [Comandos](docs/comandos.md): referência de comandos, opções e status
 - [Metodologia do Match Score](docs/match-score.md): os cinco critérios, pesos e faixas
 - [Proteção de dados](docs/protecao-de-dados.md): como nada sensível vai para o Git

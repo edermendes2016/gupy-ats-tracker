@@ -82,7 +82,7 @@ export function App() {
           </section>
         )}
 
-        {aba === "metricas" && <MetricasPainel />}
+        {aba === "metricas" && <MetricasPainel anonimo={anonimo} />}
 
         {aba === "nova" && (
           <section aria-label="Nova vaga">

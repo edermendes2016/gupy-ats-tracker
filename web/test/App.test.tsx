@@ -20,6 +20,15 @@ function renderizar() {
   );
 }
 
+const METRICAS = {
+  total: 4, enviadas: 3, chegaramEntrevista: 1, taxaConversao: 0.33, ofertas: 0, scoreMedio: 61,
+  porStatus: [{ status: "entrevista", vagas: 1 }],
+  faixas: [{ faixa: "80-100", enviadas: 2, entrevistas: 1 }],
+  evolucao: [{ mes: "2026-02", analisadas: 4, enviadas: 3, entrevistas: 1 }],
+  pontosFortes: [{ nome: "Python", vagas: 3 }],
+  lacunas: [{ nome: "Kubernetes", vagas: 2 }],
+};
+
 describe("App", () => {
   let chamadas: string[];
 
@@ -48,7 +57,7 @@ describe("App", () => {
   it("troca de aba para Métricas", async () => {
     vi.stubGlobal("fetch", vi.fn(async (url: string) => {
       const corpo = url.includes("/api/metricas")
-        ? { total: 4, enviadas: 3, chegaramEntrevista: 1, taxaConversao: 0.33 }
+        ? METRICAS
         : [VAGA];
       return new Response(JSON.stringify(corpo), { status: 200, headers: { "content-type": "application/json" } });
     }));
@@ -56,6 +65,21 @@ describe("App", () => {
     await userEvent.click(screen.getByRole("tab", { name: "Métricas" }));
     expect(await screen.findByText("vagas analisadas")).toBeTruthy();
     expect(screen.getByText("33%")).toBeTruthy();
+    expect(screen.getByText("Python")).toBeTruthy();
+    expect(screen.getByText("Kubernetes")).toBeTruthy();
+  });
+
+  it("mostra Compartilhar só no modo anônimo", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      const corpo = url.includes("/api/metricas") ? METRICAS : [VAGA];
+      return new Response(JSON.stringify(corpo), { status: 200, headers: { "content-type": "application/json" } });
+    }));
+    renderizar();
+    await userEvent.click(screen.getByRole("tab", { name: "Métricas" }));
+    await screen.findByText("vagas analisadas");
+    expect(screen.queryByRole("heading", { name: "Compartilhar" })).toBeNull();
+    await userEvent.click(screen.getByLabelText(/modo anônimo/i));
+    expect(await screen.findByRole("heading", { name: "Compartilhar" })).toBeTruthy();
   });
 });
 

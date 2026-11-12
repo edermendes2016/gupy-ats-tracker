@@ -1,0 +1,33 @@
+# Lista de permissão: por padrão nada entra no contexto da imagem.
+# Dados pessoais (private/, data/ fora de exemplo, currículos, capturas, planilhas) ficam de fora.
+*
+
+!Dockerfile
+!.dockerignore
+!docker/
+!docker/entrypoint.sh
+!proto/
+!proto/**
+!scripts/gerar_proto.py
+!gupy_tracker/
+!gupy_tracker/**
+!server/
+!server/**
+!web/
+!web/**
+
+# Nada gerado nem local vai junto.
+**/node_modules
+**/dist
+**/.vite
+**/__pycache__
+**/*.pyc
+gupy_tracker/v1/*_pb2*.py
+**/*.pdf
+**/*.docx
+**/*.xlsx
+**/*.png
+**/*.jpg
+**/*.har
+**/.env
+**/.env.*

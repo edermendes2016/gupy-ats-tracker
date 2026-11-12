@@ -140,6 +140,15 @@ class RankingServicer(_Base):
             enviadas=m["enviadas"],
             chegaram_entrevista=m["entrevistas"],
             taxa_conversao=m["conversao_entrevista"] / 100.0,
+            ofertas=m["ofertas"],
+            score_medio=m["score_medio"],
+            por_status=[rpb.ContagemStatus(status=s, vagas=n) for s, n in sorted(m["por_status"].items())],
+            faixas=[rpb.FaixaScore(faixa=f, enviadas=d["enviadas"], entrevistas=d["entrevistas"])
+                    for f, d in m["por_faixa"].items()],
+            evolucao=[rpb.PontoEvolucao(mes=e["mes"], analisadas=e["analisadas"], enviadas=e["enviadas"],
+                                        entrevistas=e["entrevistas"]) for e in m["evolucao"]],
+            pontos_fortes=[rpb.Termo(nome=t["nome"], vagas=t["vagas"]) for t in m["pontos_fortes"]],
+            lacunas=[rpb.Termo(nome=t["nome"], vagas=t["vagas"]) for t in m["lacunas"]],
         )
 
 

@@ -1,0 +1,14 @@
+# Sobe tudo com um comando: docker compose up --build
+# Interface e API em http://127.0.0.1:3000
+services:
+  tracker:
+    build: .
+    image: gupy-tracker:local
+    ports:
+      - "127.0.0.1:3000:3000"   # só na própria máquina
+    volumes:
+      # Dados reais (vagas.json) ficam na pasta private/ do seu computador, nunca na imagem.
+      - ./private:/app/private
+      # Planilha de acompanhamento: aponte GUPY_PLANILHAS para a pasta onde ela está.
+      - ${GUPY_PLANILHAS:-./planilhas}:/app/planilhas
+    restart: unless-stopped
