@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from datetime import date
 
 from .modelo import calcular_match_score, classificar
+from .validacao_curriculo import verificar as verificar_curriculo
 
 # Nota usada quando não há como medir um critério. Sempre vem com um aviso.
 NEUTRO = 50
@@ -301,7 +302,7 @@ def analisar(
     if not curriculo.strip():
         raise ValueError("o currículo está vazio")
 
-    avisos: list[str] = []
+    avisos: list[str] = verificar_curriculo(curriculo)
     cobertura = cobertura_curriculo(curriculo)
     obrigatorias, desejaveis = separar_requisitos(requisitos or vaga)
 
