@@ -39,6 +39,46 @@ def anonimizar(vagas: list[dict]) -> list[dict]:
     return publicas
 
 
+def _termo_base(item: str) -> str:
+    """'Docker (só estudo ou certificação)' -> 'Docker'."""
+    return item.split(" (")[0].strip()
+
+
+def agregar_termos(vagas: list[dict], campo: str) -> list[dict]:
+    """Conta em quantas vagas cada termo aparece (uma vez por vaga), do mais frequente ao menos."""
+    contagem: Counter = Counter()
+    for v in vagas:
+        contagem.update({_termo_base(t) for t in v.get(campo, [])})
+    ordenados = sorted(contagem.items(), key=lambda kv: (-kv[1], kv[0].casefold()))
+    return [{"nome": nome, "vagas": n} for nome, n in ordenados]
+
+
+def _primeira_data(vaga: dict, estados: set[str]) -> str | None:
+    """Data da primeira vez que a vaga entrou em um dos estados (pelo histórico)."""
+    for h in sorted(vaga.get("historico", []), key=lambda h: h["data"]):
+        if h["status"] in estados:
+            return h["data"]
+    return None
+
+
+def evolucao(vagas: list[dict]) -> list[dict]:
+    """Por mês (AAAA-MM): vagas analisadas, candidaturas enviadas e entrevistas no mês."""
+    meses: dict[str, dict] = {}
+
+    def conta(mes: str, chave: str) -> None:
+        meses.setdefault(mes, {"analisadas": 0, "enviadas": 0, "entrevistas": 0})[chave] += 1
+
+    for v in vagas:
+        conta(v["data"][:7], "analisadas")
+        enviada = _primeira_data(v, ENVIADAS) if v["status"] in ENVIADAS else None
+        if enviada:
+            conta(enviada[:7], "enviadas")
+        entrevista = _primeira_data(v, CHEGOU_ENTREVISTA) if v["status"] in CHEGOU_ENTREVISTA else None
+        if entrevista:
+            conta(entrevista[:7], "entrevistas")
+    return [{"mes": mes, **meses[mes]} for mes in sorted(meses)]
+
+
 def metricas(vagas: list[dict]) -> dict:
     enviadas = [v for v in vagas if v["status"] in ENVIADAS]
     entrevistas = [v for v in enviadas if v["status"] in CHEGOU_ENTREVISTA]
@@ -63,6 +103,9 @@ def metricas(vagas: list[dict]) -> dict:
         "score_medio": round(sum(scores) / len(scores)) if scores else 0,
         "por_status": dict(Counter(v["status"] for v in vagas)),
         "por_faixa": faixas,
+        "evolucao": evolucao(vagas),
+        "pontos_fortes": agregar_termos(vagas, "palavras_chave"),
+        "lacunas": agregar_termos(vagas, "lacunas"),
     }
 
 

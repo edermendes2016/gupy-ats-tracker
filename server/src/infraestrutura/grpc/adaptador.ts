@@ -73,10 +73,28 @@ export function novaVagaParaProto(nova: NovaVaga): { vaga: Record<string, unknow
 }
 
 export function metricasDoProto(p: Record<string, any>): Metricas {
+  const termos = (lista: any[] | undefined) =>
+    (lista ?? []).map((t) => ({ nome: String(t.nome), vagas: Number(t.vagas ?? 0) }));
   return {
     total: Number(p.total ?? 0),
     enviadas: Number(p.enviadas ?? 0),
     chegaramEntrevista: Number(p.chegaram_entrevista ?? 0),
     taxaConversao: Number(p.taxa_conversao ?? 0),
+    ofertas: Number(p.ofertas ?? 0),
+    scoreMedio: Number(p.score_medio ?? 0),
+    porStatus: (p.por_status ?? []).map((c: any) => ({ status: String(c.status), vagas: Number(c.vagas ?? 0) })),
+    faixas: (p.faixas ?? []).map((f: any) => ({
+      faixa: String(f.faixa),
+      enviadas: Number(f.enviadas ?? 0),
+      entrevistas: Number(f.entrevistas ?? 0),
+    })),
+    evolucao: (p.evolucao ?? []).map((e: any) => ({
+      mes: String(e.mes),
+      analisadas: Number(e.analisadas ?? 0),
+      enviadas: Number(e.enviadas ?? 0),
+      entrevistas: Number(e.entrevistas ?? 0),
+    })),
+    pontosFortes: termos(p.pontos_fortes),
+    lacunas: termos(p.lacunas),
   };
 }

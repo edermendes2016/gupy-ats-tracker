@@ -14,11 +14,45 @@ message RankingResponse {
   repeated Vaga vagas_ordenadas = 1;  // ordenadas por match_score, decrescente
 }
 
+// Um termo (palavra-chave ou lacuna) e em quantas vagas ele aparece.
+message Termo {
+  string nome = 1;
+  int32 vagas = 2;
+}
+
+// Quantas vagas estão em cada status (funil).
+message ContagemStatus {
+  string status = 1;   // texto do domínio, como "entrevista"
+  int32 vagas = 2;
+}
+
+// Uma faixa de Match Score: candidaturas enviadas e entrevistas nela.
+message FaixaScore {
+  string faixa = 1;    // "40-59", "60-79" ou "80-100"
+  int32 enviadas = 2;
+  int32 entrevistas = 3;
+}
+
+// Um mês (AAAA-MM) da evolução do funil.
+message PontoEvolucao {
+  string mes = 1;
+  int32 analisadas = 2;
+  int32 enviadas = 3;
+  int32 entrevistas = 4;
+}
+
 message MetricasResponse {
   int32 total = 1;
   int32 enviadas = 2;
   int32 chegaram_entrevista = 3;
   double taxa_conversao = 4;          // 0.0 a 1.0
+  int32 ofertas = 5;
+  int32 score_medio = 6;              // 0-100
+  repeated ContagemStatus por_status = 7;
+  repeated FaixaScore faixas = 8;
+  repeated PontoEvolucao evolucao = 9;      // ordenado por mês
+  repeated Termo pontos_fortes = 10;        // ordenado por frequência
+  repeated Termo lacunas = 11;              // ordenado por frequência
 }
 
 service RankingService {
