@@ -103,8 +103,8 @@ class ServidorTest(unittest.TestCase):
         self.assertEqual(len(ranking.vagas_ordenadas), 2)
         metricas = self.canal.unary_unary(
             "/gupy_tracker.v1.RankingService/Metricas",
-            request_serializer=lambda _: b"",
-            response_deserializer=ranking_pb2.MetricasResponse.FromString)(None)
+            request_serializer=ranking_pb2.MetricasRequest.SerializeToString,
+            response_deserializer=ranking_pb2.MetricasResponse.FromString)(ranking_pb2.MetricasRequest())
         self.assertEqual(metricas.total, 2)
 
     def test_recusa_endereco_que_nao_e_loopback(self):
