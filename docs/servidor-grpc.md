@@ -4,13 +4,16 @@ O tracker tem um servidor gRPC local, para uma interface ou outro serviço conve
 
 ## Como rodar
 
-```bash
-pip install .[grpc]                  # grpcio e protobuf
-sh scripts/gerar_proto.sh            # gera gupy_tracker/v1/ a partir de proto/
-python -m gupy_tracker.servidor_grpc --dados private/vagas.json
+Os comandos abaixo valem para Windows, macOS e Linux. Rode a partir da raiz do repositório.
+
+```
+python -m pip install ".[grpc]" grpcio-tools
+python scripts/gerar_proto.py
+python -m gupy_tracker.servidor_grpc
 ```
 
-Para gerar o código, o script usa o `python3` do sistema. Se o `grpcio-tools` estiver em um ambiente virtual, rode com `PYTHON=caminho/do/python sh scripts/gerar_proto.sh`.
+- `scripts/gerar_proto.py` gera `gupy_tracker/v1/` a partir de `proto/`. Ele usa o mesmo Python que está rodando, então não depende de `sh` nem de `python3`.
+- Sem `--dados`, o servidor usa `private/vagas.json` e cria o arquivo na primeira gravação.
 
 ## Regras
 

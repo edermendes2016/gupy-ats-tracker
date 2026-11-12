@@ -19,7 +19,7 @@ except ImportError:
     DISPONIVEL = False
 
 CRITERIOS = dict(obrigatorios=80, desejaveis=50, experiencia=70, dominio=60, logistica=90)
-MOTIVO = "requer 'pip install .[grpc]' e 'sh scripts/gerar_proto.sh'"
+MOTIVO = "requer 'python -m pip install \".[grpc]\" grpcio-tools' e 'python scripts/gerar_proto.py'"
 
 
 @unittest.skipUnless(DISPONIVEL, MOTIVO)

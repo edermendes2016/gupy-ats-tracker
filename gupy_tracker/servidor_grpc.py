@@ -1,9 +1,9 @@
 """Servidor gRPC local do tracker (extra opcional).
 
-Instalação e execução:
-    pip install .[grpc]
-    sh scripts/gerar_proto.sh
-    python -m gupy_tracker.servidor_grpc --dados private/vagas.json
+Instalação e execução (a partir da raiz do repositório):
+    python -m pip install ".[grpc]" grpcio-tools
+    python scripts/gerar_proto.py
+    python -m gupy_tracker.servidor_grpc
 
 Só aceita conexões de loopback (127.0.0.1 ou localhost). A CLI não depende deste módulo.
 """
@@ -21,7 +21,7 @@ LOOPBACK = ("127.0.0.1", "localhost")
 ENDERECO_PADRAO = "127.0.0.1:50051"
 MENSAGEM_DEPENDENCIA = (
     "servidor gRPC indisponível: instale com 'pip install .[grpc]' "
-    "e gere o código com 'sh scripts/gerar_proto.sh'"
+    "e gere o código com 'python scripts/gerar_proto.py'"
 )
 
 
