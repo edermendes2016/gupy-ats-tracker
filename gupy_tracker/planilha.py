@@ -182,33 +182,77 @@ def exportar(caminho: Path, vagas: list[dict]) -> tuple[int, int]:
     return adicionadas, ja_existiam
 
 
-CABECALHO = ["Data de Inscrição", "Empresa", "Cargo", "Status", "Palavras-Chave da Vaga", "Lacuna", "Fonte", "Link da vaga"]
+# Layout do modelo de controle (só formato: nenhum dado pessoal). Os estilos vêm de
+# modelo_planilha/styles.xml e theme1.xml; o número é o índice de cada célula no estilo.
+CABECALHO = [
+    "Data de Inscrição", "Empresa", "Cargo", "Status",
+    "Palavras-Chave da Vaga", "Lacuna (O que preciso aprender?)",
+    "Fonte (LinkedIn/Gupy/ outros)", "Link da vaga",
+]
+LARGURAS = [22.140625, 18, 30.42578125, 18.85546875, 50.5703125, 36.7109375, 30.7109375, 118.28515625]
+_ESTILO_LINHA = {"A": 11, "B": 1, "C": 1, "D": 1, "E": 1, "F": 1, "G": 1, "H": 2}
+ESTILOS = {
+    1: {"A": 17, "B": 16},
+    2: {"A": 9, "B": 3, "C": 3, "D": 3, "E": 3, "F": 3, "G": 3, "H": 4},
+    3: {"A": 10, "B": 1, "C": 1, "D": 15, "E": 14, "F": 1, "G": 1, "H": 7},
+    4: {"A": 10, "B": 1, "C": 1, "D": 1, "E": 1, "F": 1, "G": 1, "H": 8},
+    17: {"A": 12, "B": 5, "C": 5, "D": 5, "E": 5, "F": 5, "G": 5, "H": 6},
+    **{n: dict(_ESTILO_LINHA) for n in range(5, 17)},
+}
+ULTIMA_LINHA_MODELO = 17
+TABELA_MODELO = "Tabela1"
+PASTA_MODELO = Path(__file__).resolve().parent / "modelo_planilha"
 
 
 def gerar_modelo(caminho: Path) -> None:
-    """Cria uma planilha de controle nova, vazia, com o mesmo layout de colunas do modelo.
+    """Cria uma planilha de controle vazia, com o mesmo layout e formatação do modelo.
 
-    Não usa a planilha de ninguém: só o layout (título, cabeçalho e colunas A a H).
-    Formatação visual (cores, bordas) não é copiada; ela vem do modelo original.
+    Gera tudo por código, sem copiar a planilha de ninguém: estilos e tema são a
+    formatação do modelo, sem nenhum dado.
     """
     from xml.sax.saxutils import escape as _esc
     if caminho.exists():
         raise FileExistsError(f"já existe um arquivo em {caminho}")
-    def linha(n: int, valores: list[str]) -> str:
-        celulas = "".join(
-            f'<c r="{COLUNAS[i]}{n}" t="inlineStr"><is><t xml:space="preserve">{_esc(v)}</t></is></c>'
-            for i, v in enumerate(valores) if v
-        )
-        return f'<row r="{n}">{celulas}</row>'
+
+    def celula(col: str, n: int, estilo: int, texto: str | None = None) -> str:
+        if texto is None:
+            return f'<c r="{col}{n}" s="{estilo}"/>'
+        return f'<c r="{col}{n}" s="{estilo}" t="inlineStr"><is><t xml:space="preserve">{_esc(texto)}</t></is></c>'
+
+    linhas = []
+    for n in range(1, ULTIMA_LINHA_MODELO + 1):
+        estilos = ESTILOS.get(n, _ESTILO_LINHA)
+        cels = []
+        for col, estilo in estilos.items():  # só as células que o modelo tem em cada linha
+            texto = CABECALHO[COLUNAS.index(col)] if n == 2 else None
+            cels.append(celula(col, n, estilo, texto))
+        linhas.append(f'<row r="{n}" spans="1:8">{"".join(cels)}</row>')
+    colunas = "".join(
+        f'<col min="{i + 1}" max="{i + 1}" width="{largura}" customWidth="1"/>' for i, largura in enumerate(LARGURAS)
+    )
     aba = (
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
-        '<dimension ref="A1:H2"/><cols>'
-        + "".join(f'<col min="{i}" max="{i}" width="22" customWidth="1"/>' for i in range(1, 9))
-        + "</cols><sheetData>"
-        + linha(1, ["Controle de candidaturas Gupy"])
-        + linha(2, CABECALHO)
-        + "</sheetData></worksheet>"
+        '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+        f'<dimension ref="A1:H{ULTIMA_LINHA_MODELO}"/>'
+        '<sheetViews><sheetView tabSelected="1" workbookViewId="0"/></sheetViews>'
+        '<sheetFormatPr defaultRowHeight="15"/>'
+        f"<cols>{colunas}</cols>"
+        f'<sheetData>{"".join(linhas)}</sheetData>'
+        '<pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>'
+        '<tableParts count="1"><tablePart r:id="rId1"/></tableParts></worksheet>'
+    )
+    colunas_tabela = "".join(
+        f'<tableColumn id="{i + 1}" name="{_esc(nome)}"/>' for i, nome in enumerate(CABECALHO)
+    )
+    tabela = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<table xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" id="1" '
+        f'name="{TABELA_MODELO}" displayName="{TABELA_MODELO}" ref="A2:H{ULTIMA_LINHA_MODELO}" totalsRowShown="0">'
+        f'<autoFilter ref="A2:H{ULTIMA_LINHA_MODELO}"/>'
+        f'<tableColumns count="{len(CABECALHO)}">{colunas_tabela}</tableColumns>'
+        '<tableStyleInfo name="TableStyleMedium2" showFirstColumn="0" showLastColumn="0" '
+        'showRowStripes="1" showColumnStripes="0"/></table>'
     )
     partes = {
         "[Content_Types].xml": (
@@ -218,6 +262,9 @@ def gerar_modelo(caminho: Path) -> None:
             '<Default Extension="xml" ContentType="application/xml"/>'
             '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
             '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+            '<Override PartName="/xl/tables/table1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml"/>'
+            '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+            '<Override PartName="/xl/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>'
             "</Types>"
         ),
         "_rels/.rels": (
@@ -230,15 +277,26 @@ def gerar_modelo(caminho: Path) -> None:
             '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
             'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-            '<sheets><sheet name="Controle" sheetId="1" r:id="rId1"/></sheets></workbook>'
+            '<sheets><sheet name="Planilha1" sheetId="1" r:id="rId1"/></sheets></workbook>'
         ),
         "xl/_rels/workbook.xml.rels": (
             '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
             '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+            '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
+            '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/>'
             "</Relationships>"
         ),
-        ABA: aba,
+        "xl/worksheets/_rels/sheet1.xml.rels": (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/table" Target="../tables/table1.xml"/>'
+            "</Relationships>"
+        ),
+        "xl/worksheets/sheet1.xml": aba,
+        "xl/tables/table1.xml": tabela,
+        "xl/styles.xml": (PASTA_MODELO / "styles.xml").read_bytes(),
+        "xl/theme/theme1.xml": (PASTA_MODELO / "theme1.xml").read_bytes(),
     }
     caminho.parent.mkdir(parents=True, exist_ok=True)
     tmp = caminho.with_suffix(caminho.suffix + ".tmp")
