@@ -12,6 +12,9 @@ data/*
 # Currículos, cartas e exportações
 *.pdf
 *.docx
+*.xlsx
+*.xls
+*.csv
 *.doc
 *.odt
 curriculo*

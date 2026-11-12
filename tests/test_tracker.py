@@ -137,3 +137,49 @@ class Cli(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PlanilhaDeControle(unittest.TestCase):
+    """Exportação para a planilha .xlsx, feita só com a biblioteca padrão."""
+
+    def _planilha(self, d):
+        from zipfile import ZipFile
+        caminho = Path(d) / "planilha.xlsx"
+        xml = ('<?xml version="1.0"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+               '<dimension ref="A1:H4"/><sheetData>'
+               '<row r="1"><c r="A1" t="inlineStr"><is><t>Copie</t></is></c></row>'
+               '<row r="2"><c r="A2" t="inlineStr"><is><t>Data</t></is></c></row>'
+               '<row r="3"><c r="A3"/><c r="B3"/></row>'
+               '<row r="4" spans="1:8"><c r="A4"/></row></sheetData></worksheet>')
+        with ZipFile(caminho, "w") as z:
+            z.writestr("xl/worksheets/sheet1.xml", xml)
+        return caminho
+
+    def _xml(self, caminho):
+        from zipfile import ZipFile
+        return ZipFile(caminho).read("xl/worksheets/sheet1.xml").decode()
+
+    def test_grava_uma_linha_por_vaga_sem_duplicar(self):
+        from datetime import date
+        from gupy_tracker import planilha
+        with tempfile.TemporaryDirectory() as d:
+            caminho = self._planilha(d)
+            v = {**vaga("a", "Alfa", 80), "cargo": "Dev", "data": "2026-03-01",
+                 "url": "https://alfa.gupy.io/job/1", "palavras_chave": ["Python", "SQL"], "lacunas": ["Power BI"]}
+            self.assertEqual(planilha.exportar(caminho, [v]), (1, 0))
+            self.assertEqual(planilha.exportar(caminho, [v]), (0, 1))
+            xml = self._xml(caminho)
+            serial = (date(2026, 3, 1) - date(1899, 12, 30)).days
+            self.assertIn(f"<v>{serial}</v>", xml)
+            for texto in ("Alfa", "Dev", "candidatada", "Python, SQL", "Power BI", "Gupy",
+                          "https://alfa.gupy.io/job/1"):
+                self.assertIn(f"<t xml:space=\"preserve\">{texto}</t>", xml)
+            self.assertEqual(xml.count("<t xml:space=\"preserve\">Alfa</t>"), 1)
+
+    def test_escapa_caracteres_especiais(self):
+        from gupy_tracker import planilha
+        with tempfile.TemporaryDirectory() as d:
+            caminho = self._planilha(d)
+            v = {**vaga("a", "A&B <Ltda>", 80), "cargo": "Dev", "data": "2026-03-01"}
+            planilha.exportar(caminho, [v])
+            self.assertIn("A&amp;B &lt;Ltda&gt;", self._xml(caminho))

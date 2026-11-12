@@ -6,7 +6,7 @@ Todos são executados da raiz do projeto, no formato `python -m gupy_tracker <co
 |---------|-----------|
 | `adicionar` | Registra uma vaga analisada e mostra o Match Score |
 | `status <id> <novo_status>` | Atualiza o status de uma vaga (aceita um trecho do id) |
-| `ranking` | Mostra o ranking no terminal (`--anonimo` esconde os nomes) |
+| `ranking` | Mostra o ranking no terminal (`--anonimo` esconde os nomes; `--planilha` preenche a planilha de controle) |
 | `metricas` | Funil e taxa de conversão em JSON |
 | `relatorio` | Gera o ranking em Markdown, anônimo por padrão (`--saida arquivo.md`, `--com-nomes`) |
 | `verificar` | Procura nomes de empresas reais nos arquivos versionáveis (`--staged` olha só o stage) |
@@ -25,6 +25,12 @@ Obrigatórias: `--empresa`, `--cargo` e as cinco notas de 0 a 100 (`--obrigatori
 | `--url` | link da vaga (nunca aparece no relatório público) |
 | `--palavra-chave` | termo da vaga que o seu currículo cobre; pode repetir |
 | `--lacuna` | requisito que o seu currículo não cobre; pode repetir |
+| `--fonte` | onde a vaga foi encontrada (padrão: `Gupy`) |
+| `--curriculo` | `perfil-gupy` (padrão) ou `outro` |
+| `--nome-curriculo` | nome do arquivo quando `--curriculo outro` (só o nome, nunca o conteúdo) |
+| `--descricao` | campo **Descrição da vaga** da Gupy (texto, ou `@arquivo.txt`) |
+| `--responsabilidades` | campo **Responsabilidades e atribuições** (texto, ou `@arquivo.txt`) |
+| `--requisitos` | campo **Requisitos e qualificações** (texto, ou `@arquivo.txt`) |
 
 ## Status do funil
 
@@ -35,3 +41,7 @@ Contam como candidatura enviada todos menos `analisada` e `descartada`. Contam c
 ## Arquivo de dados
 
 A ordem de escolha é: `--dados caminho/vagas.json` (antes do comando), a variável `GUPY_TRACKER_DADOS`, `private/vagas.json` e, só para leitura, os dados de exemplo. Os comandos que gravam (`adicionar` e `status`) nunca alteram os dados de exemplo.
+
+## Planilha de controle
+
+`ranking --planilha ARQUIVO.xlsx` acrescenta uma linha por vaga às colunas do modelo: Data de Inscrição, Empresa, Cargo, Status, Palavras-Chave da Vaga, Lacuna, Fonte e Link da vaga. Vagas que já estão na planilha (mesma empresa e cargo) não são duplicadas. Formatação e tabela da planilha são preservadas, e a escrita usa só a biblioteca padrão do Python.
