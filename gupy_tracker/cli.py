@@ -7,7 +7,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
-from . import analise, armazenamento, casos_de_uso, curriculo, planilha, relatorio, vazamento
+from . import analise, armazenamento, casos_de_uso, leitor_texto, planilha, relatorio, vazamento
 from .modelo import AREAS, CORTE_VIABILIDADE, PESOS, SENIORIDADES, STATUS
 
 
@@ -32,7 +32,7 @@ def _imprimir_analise(r: analise.Analise) -> None:
 
 def cmd_analisar(args, caminho: Path) -> int:
     try:
-        texto_cv = curriculo.ler_curriculo(Path(args.cv))
+        texto_cv = leitor_texto.ler_curriculo(Path(args.cv))
         descricao = _texto(args.descricao) or ""
         responsabilidades = _texto(args.responsabilidades) or ""
         requisitos = _texto(args.requisitos) or ""
