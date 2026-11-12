@@ -44,21 +44,28 @@ export interface LinkRede {
   id: string;
   nome: string;
   href: string;
+  /** Copia o texto do cartão ao clicar (LinkedIn não aceita texto pré-preenchido). */
+  copiarAoClicar?: boolean;
 }
+
+const LINKEDIN_FEED = "https://www.linkedin.com/feed/?shareActive=true";
 
 /**
  * Links de compartilhamento para as principais redes. Recebem só o texto do cartão e a
- * URL pública da página (sem query nem hash). Sem URL pública (instalação local), LinkedIn e
- * Facebook não aparecem, porque só compartilham um link. LinkedIn também não aceita texto
- * pré-preenchido: por isso o botão de copiar fica ao lado.
+ * URL pública da página (sem query nem hash). LinkedIn aparece sempre: sem URL pública
+ * (instalação local) abre o feed, e o clique copia o texto para colar na publicação.
+ * Facebook só aparece com URL pública, porque só compartilha um link.
  */
 export function linksCompartilhamento(texto: string, url: string | null): LinkRede[] {
   const t = encodeURIComponent(texto);
-  const links: LinkRede[] = [];
-  if (url) {
-    const u = encodeURIComponent(url);
-    links.push({ id: "linkedin", nome: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${u}` });
-  }
+  const links: LinkRede[] = [
+    {
+      id: "linkedin",
+      nome: "LinkedIn",
+      href: url ? `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}` : LINKEDIN_FEED,
+      copiarAoClicar: true,
+    },
+  ];
   links.push({ id: "x", nome: "X", href: `https://x.com/intent/post?text=${t}` });
   if (url) {
     links.push({ id: "facebook", nome: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}` });
