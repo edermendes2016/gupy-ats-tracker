@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Status, Vaga } from "../../dominio/tipos";
 import { ROTULO_STATUS, STATUS } from "../../dominio/tipos";
-import { formatarData, tomDoScore } from "../../dominio/score";
+import { corDoSelo, formatarData } from "../../dominio/score";
 import { useAtualizarStatus, useExcluirVaga } from "../../aplicacao/consultas";
 
 interface Props {
@@ -40,7 +40,7 @@ export function TabelaVagas({ vagas, anonimo, editavel, onSelecionar, excluivel 
           {vagas.map((v) => (
             <tr key={v.id}>
               <td>
-                <span className={`selo selo-${tomDoScore(v.matchScore)}`}>{v.matchScore}%</span>
+                <span className={`selo-badge selo-${corDoSelo(v.matchScore)}`}>{v.matchScore}%</span>
               </td>
               <td>
                 {anonimo ? (
@@ -69,7 +69,7 @@ export function TabelaVagas({ vagas, anonimo, editavel, onSelecionar, excluivel 
                     ))}
                   </select>
                 ) : (
-                  ROTULO_STATUS[v.status]
+                  <span className={`status-badge s-${v.status}`}><span className="status-dot" aria-hidden="true" />{ROTULO_STATUS[v.status]}</span>
                 )}
               </td>
               {excluivel && (
@@ -87,6 +87,7 @@ export function TabelaVagas({ vagas, anonimo, editavel, onSelecionar, excluivel 
                     </span>
                   ) : (
                     <button
+                      className="excluir-botao"
                       aria-label={`Excluir ${v.empresa} ${v.cargo}`}
                       onClick={() => setAConfirmar(v.id)}
                     >

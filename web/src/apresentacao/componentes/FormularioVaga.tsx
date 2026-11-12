@@ -95,14 +95,14 @@ export function FormularioVaga({ aoCriar }: { aoCriar: () => void }) {
       <fieldset>
         <legend>Análise automática</legend>
         <div className="campos">
-          <label className="largo">Currículo (PDF com texto, DOCX, TXT ou MD)
+          <label className="largo dropzone">Currículo (PDF com texto, DOCX, TXT ou MD)
             <input type="file" accept={EXTENSOES} onChange={(e) => setArquivo(e.target.files?.[0] ?? null)} />
           </label>
           <label className="largo">Texto da vaga (cole a página da Gupy: descrição, responsabilidades e requisitos)
             <textarea rows={6} value={descricao} onChange={(e) => setDescricao(e.target.value)} />
           </label>
         </div>
-        <button type="button" onClick={analisarVaga} disabled={!arquivo || !descricao.trim() || analisar.isPending}>
+        <button type="button" className="botao-analisar" onClick={analisarVaga} disabled={!arquivo || !descricao.trim() || analisar.isPending}>
           {analisar.isPending ? "Analisando…" : "Analisar currículo"}
         </button>
         {analisar.isError && <p role="alert" className="erro">{analisar.error.message}</p>}

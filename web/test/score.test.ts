@@ -1,11 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { formatarData, tomDoScore } from "../src/dominio/score";
+import { corDoSelo, formatarData, tomDoScore } from "../src/dominio/score";
 
 describe("tomDoScore", () => {
   it.each([
     [87, "alta"], [80, "alta"], [79, "boa"], [60, "boa"], [59, "aposta"], [40, "aposta"], [39, "descartar"], [0, "descartar"],
   ])("score %i -> %s", (score, tom) => {
     expect(tomDoScore(score)).toBe(tom);
+  });
+});
+
+describe("corDoSelo", () => {
+  it.each([
+    [100, "verde"], [70, "verde"], [69, "ambar"], [50, "ambar"], [49, "vermelho"], [0, "vermelho"],
+  ])("score %i -> %s", (score, cor) => {
+    expect(corDoSelo(score)).toBe(cor);
   });
 });
 
