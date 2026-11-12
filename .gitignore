@@ -61,3 +61,4 @@ gupy_tracker/v1/*_pb2_grpc.py
 # Node / BFF e interface
 node_modules/
 dist/
+.vite/

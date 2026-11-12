@@ -1,62 +1,98 @@
-# Rodar com Docker
+# Como instalar e rodar com Docker
 
-Sobe o serviço Python (gRPC), o BFF e a interface com **um comando**. Não precisa instalar Python nem Node na sua máquina; só o Docker.
+Este guia mostra como rodar o Gupy Tracker no seu computador, sem instalar Python nem Node. Você só precisa do Docker. Tudo roda localmente: ninguém mais na rede acessa o sistema.
 
-## Pré-requisitos
+## 1. Instale o Docker
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Windows e macOS) ou Docker Engine (Linux), com o Compose incluído.
+- **Windows e macOS:** instale o [Docker Desktop](https://www.docker.com/products/docker-desktop/). Abra o programa e espere ele terminar de iniciar (o ícone de baleia fica parado).
+- **Linux:** instale o Docker Engine com o plugin Compose.
 
-## Subir
+## 2. Baixe o projeto
 
-Na pasta do projeto:
+Com Git:
+
+```
+git clone https://github.com/edermendes2016/gupy-ats-tracker.git
+cd gupy-ats-tracker
+```
+
+Sem Git: na página do repositório no GitHub, clique em **Code → Download ZIP**, descompacte a pasta e abra o terminal dentro dela.
+
+## 3. Suba o sistema
+
+Na pasta do projeto, rode:
 
 ```
 docker compose up --build
 ```
 
-Depois, abra http://127.0.0.1:3000. Para parar, `Ctrl+C` ou `docker compose down`.
+A primeira vez demora alguns minutos, porque o Docker monta a imagem. Deixe esse terminal aberto enquanto usa o sistema.
 
-### Windows (PowerShell ou cmd)
+## 4. Abra no navegador
 
-```
-docker compose up --build
-```
+Acesse **http://127.0.0.1:3000**
 
-Os mesmos comandos valem no Windows. Se a planilha estiver em outra pasta, crie um arquivo `.env` (copie `.env.example`) e aponte `GUPY_PLANILHAS` para ela, por exemplo:
+Para desligar, volte ao terminal e aperte `Ctrl+C`. Para remover os contêineres depois, rode `docker compose down`. Os seus dados continuam nas pastas do projeto.
 
-```
-GUPY_PLANILHAS=C:\Users\voce\Documents\Gupy
-```
+## 5. (Opcional) Veja com dados de exemplo
+
+Ao começar, o sistema aparece vazio. Para ver como ele funciona com vagas fictícias, copie o arquivo de exemplo para a pasta de dados:
+
+- **Windows (PowerShell):**
+  ```
+  mkdir private
+  copy data\exemplo\vagas.json private\vagas.json
+  ```
+- **macOS ou Linux:**
+  ```
+  mkdir -p private
+  cp data/exemplo/vagas.json private/vagas.json
+  ```
+
+Depois, recarregue a página. As empresas são fictícias.
+
+## 6. Use as abas
+
+- **Ranking:** as vagas em ordem de Match Score. Quanto maior, mais aderente ao currículo.
+- **Vagas:** a lista completa. Dá para filtrar por status e mudar o status de cada vaga.
+- **Métricas:** o funil de candidaturas (quantas viraram entrevista e quantas viraram oferta).
+- **Nova vaga:** cadastra uma vaga. Envie um currículo em PDF, DOCX, TXT ou MD e cole o texto da vaga. Clique em **Analisar currículo** e o sistema preenche as notas dos critérios. Confira antes de salvar.
+
+## 7. (Opcional) Use uma planilha de controle
+
+Se você acompanha as candidaturas em uma planilha Excel, o sistema pode preenchê-la.
+
+1. Crie uma pasta chamada `planilhas` dentro da pasta do projeto e coloque nela o arquivo `.xlsx`. Se ainda não tiver planilha, pule para o item 3 e o sistema cria uma.
+2. Na página, na seção de planilha, digite o caminho **dentro do contêiner**: `/app/planilhas/nome-do-arquivo.xlsx`. O botão **Abrir planilha** não funciona com Docker, então digite o caminho.
+3. Para criar uma planilha nova, clique em **Gerar planilha** e informe `/app/planilhas/controle.xlsx`.
+4. Clique em **Exportar planilha**. O sistema adiciona uma linha para cada vaga que ainda não está na planilha. Vagas já existentes não são duplicadas.
+
+Observação: o sistema preenche a planilha a partir das vagas cadastradas. Ele não importa linhas de uma planilha existente.
+
+## 8. Modo anônimo
+
+No topo da página, marque **Modo anônimo**. Com ele ligado:
+
+- empresas, cargos, datas e links ficam escondidos;
+- o status das vagas não pode ser alterado;
+- a exportação para planilha fica desligada;
+- na aba **Métricas**, o botão **Compartilhar** gera um cartão só com números agregados, sem nomes de empresas.
+
+Use o modo anônimo para mostrar o sistema a outras pessoas sem expor a sua busca.
 
 ## Onde ficam os dados
 
-Nada pessoal entra na imagem. Tudo vem por volume, pelo `docker-compose.yml`:
+Nada pessoal entra na imagem do Docker. Os dados ficam em pastas do seu computador:
 
-| No seu computador | Dentro do contêiner | O que é |
-|---|---|---|
-| `./private/` | `/app/private/` | `vagas.json`, criado na primeira vaga salva |
-| `$GUPY_PLANILHAS` (padrão `./planilhas/`) | `/app/planilhas/` | sua planilha `.xlsx` |
-
-Na aba de planilha da interface, use o caminho **dentro do contêiner**, por exemplo `/app/planilhas/acompanhamento.xlsx`. No Windows, o botão de escolher arquivo não funciona dentro do Docker: digite o caminho.
-
-O `.dockerignore` nega tudo por padrão e só libera o código. `private/`, `data/` (fora de `data/exemplo/`), currículos, capturas de tela e planilhas nunca vão para a imagem. `tests/test_docker.py` verifica isso.
-
-## Como funciona
-
-- Uma imagem, dois processos: o serviço gRPC escuta só em `127.0.0.1` dentro do contêiner (ele recusa outros endereços) e o BFF, na porta 3000, entrega a API e a interface.
-- O `.proto` é compilado durante o build (`python scripts/gerar_proto.py`), então o código gerado nunca precisa ir para o Git.
-- A porta é publicada só em `127.0.0.1`: o serviço não fica acessível de outras máquinas da rede.
+| Pasta no seu computador | O que guarda |
+|---|---|
+| `private/` | as vagas cadastradas (`vagas.json`) |
+| `planilhas/` | a planilha de controle `.xlsx` |
 
 ## Problemas comuns
 
-- **`exec /usr/local/bin/entrypoint.sh: no such file or directory` e o contêiner reinicia em loop**: o arquivo foi clonado com fim de linha do Windows (CRLF). O `.gitattributes` do projeto já fixa LF, e a imagem também remove o `\r`. Se a cópia local é antiga, atualize e reconstrua sem cache:
-
-  ```
-  git pull
-  docker compose build --no-cache
-  docker compose up
-  ```
-
-- **Erro de volume no Windows**: confira em Docker Desktop, *Settings → Resources → File sharing*, se a pasta do projeto (e a da planilha) estão liberadas.
-- **Leitura de PDF**: a imagem já inclui o `pdftotext` (poppler).
-- **Recriar do zero**: `docker compose build --no-cache`.
+- **"Cannot connect to the Docker daemon" ou comando não encontrado:** abra o Docker Desktop e espere ele iniciar.
+- **A página não abre:** confira se o terminal mostra o sistema em execução. Se a porta 3000 já estiver em uso, feche o outro programa que a usa.
+- **O contêiner reinicia sem parar, com a mensagem `no such file or directory`:** o arquivo foi baixado com fim de linha do Windows. Rode `git pull` e depois `docker compose build --no-cache`, e suba de novo com `docker compose up`.
+- **Erro de compartilhamento de pasta no Windows ou macOS:** no Docker Desktop, em *Settings → Resources → File sharing*, confirme que a pasta do projeto está liberada.
+- **Reconstruir do zero:** `docker compose build --no-cache`.
