@@ -38,11 +38,10 @@ describe("AventuraPainel", () => {
     expect(screen.getByRole("progressbar", { name: "Progresso até o próximo nível" })).toBeTruthy();
   });
 
-  it("no modo anônimo não mostra a lista de vagas nem o formulário", async () => {
+  it("no modo anônimo não mostra a lista de vagas", async () => {
     renderizar(true);
     await screen.findByText("Nível 2");
     expect(screen.queryByText("XP por vaga")).toBeNull();
-    expect(screen.queryByText("Salvar progresso")).toBeNull();
   });
 
   it("lista as vagas que rendem XP quando não é anônimo", async () => {

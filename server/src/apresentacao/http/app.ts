@@ -23,15 +23,6 @@ import {
   NovaVagaBody,
 } from "./esquemas.js";
 
-const ProgressoEtapasBody = zod
-  .object({
-    empresa: zod.string().trim().min(1),
-    cargo: zod.string().trim().min(1),
-    atual: zod.number().int().min(0),
-    total: zod.number().int().min(1),
-  })
-  .refine((c) => c.atual <= c.total, { message: "atual não pode passar de total", path: ["atual"] });
-
 /** Formato JSON de uma vaga, em camelCase, como a interface espera. */
 export const vagaJson = (v: Vaga) => v;
 
@@ -146,11 +137,6 @@ export function criarApp(
     const { id } = validar(MissaoParams, req.params);
     const { feita } = validar(MarcarMissaoBody, req.body);
     return casos.marcarMissao(id, feita);
-  });
-
-  app.post("/api/aventura/progresso", async (req) => {
-    const corpo = validar(ProgressoEtapasBody, req.body);
-    return casos.registrarProgresso(corpo);
   });
 
   app.post("/api/analises", async (req) => {

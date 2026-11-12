@@ -141,11 +141,6 @@ export interface Metricas {
   lacunas: Termo[];
 }
 
-export interface ProgressoEtapas {
-  atual: number;
-  total: number;
-}
-
 /** Personagem da aba Aventura (XP calculado no BFF). */
 export interface Aventura {
   nivel: number;

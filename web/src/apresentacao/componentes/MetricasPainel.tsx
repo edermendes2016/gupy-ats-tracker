@@ -50,6 +50,7 @@ function Faixas({ m }: { m: Metricas }) {
   return (
     <section aria-label="Conversão por faixa de score">
       <h3>Conversão por faixa de Match Score</h3>
+      <div className="tabela-wrap">
       <table className="tabela-simples">
         <thead>
           <tr><th>Faixa</th><th>Candidaturas</th><th>Entrevistas</th><th>Conversão</th></tr>
@@ -65,6 +66,7 @@ function Faixas({ m }: { m: Metricas }) {
           ))}
         </tbody>
       </table>
+      </div>
     </section>
   );
 }

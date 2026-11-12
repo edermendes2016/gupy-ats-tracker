@@ -1,7 +1,6 @@
 // Aventura: regras do XP do personagem desempregado. Módulo puro, sem I/O.
 // O XP vem de dois lugares, ambos calculados aqui no servidor:
 //   1. Tempo em cada status, a partir do histórico gravado pelo servidor (datas por dia).
-//   2. Etapas concluídas de um processo seletivo, informadas pela extensão ou à mão.
 import type { HistoricoItem, Status, Vaga } from "./vaga.js";
 
 /** XP por dia parado em cada etapa. Descartada, recusada e desistência não rendem. */
@@ -16,10 +15,6 @@ export const XP_POR_DIA: Partial<Record<Status, number>> = {
 
 /** Teto de dias contados por etapa e por vaga, para ninguém farmar uma vaga parada. */
 export const TETO_DIAS_POR_ETAPA = 30;
-
-/** XP base por etapa concluída, mais um bônus por etapa do processo inteiro. */
-export const XP_BASE_ETAPA = 10;
-export const XP_POR_ETAPA_DO_PROCESSO = 2;
 
 /** Bônus por conquista desbloqueada e por missão concluída, com teto para não dominar o XP. */
 export const XP_BONUS_CONQUISTA = 25;
@@ -40,11 +35,6 @@ export const TITULOS = [
   "Quase Contratado",
   "Lenda do Processo Seletivo",
 ] as const;
-
-export interface ProgressoEtapas {
-  atual: number;
-  total: number;
-}
 
 export interface XpVaga {
   id: string;
@@ -97,21 +87,14 @@ export function xpPorTempo(historico: HistoricoItem[], hoje: string): number {
   return xp;
 }
 
-/** XP das etapas concluídas. Processos com mais etapas valem mais por etapa. */
-export function xpPorEtapas(progresso: ProgressoEtapas): number {
-  const total = Math.max(0, Math.floor(progresso.total));
-  const atual = Math.min(Math.max(0, Math.floor(progresso.atual)), total);
-  return atual * (XP_BASE_ETAPA + XP_POR_ETAPA_DO_PROCESSO * total);
-}
-
 /** Sem histórico gravado, a vaga conta desde a data em que foi cadastrada, no status atual. */
 export function historicoEfetivo(vaga: Vaga): HistoricoItem[] {
   if (vaga.historico.length > 0) return vaga.historico;
   return [{ data: vaga.data, status: vaga.status }];
 }
 
-export function xpDaVaga(vaga: Vaga, hoje: string, progresso?: ProgressoEtapas): number {
-  return xpPorTempo(historicoEfetivo(vaga), hoje) + (progresso ? xpPorEtapas(progresso) : 0);
+export function xpDaVaga(vaga: Vaga, hoje: string): number {
+  return xpPorTempo(historicoEfetivo(vaga), hoje);
 }
 
 /** Bônus de conquistas e missões, com teto. */
@@ -129,10 +112,9 @@ export function tituloDoNivel(nivel: number): string {
   return TITULOS[indice] ?? TITULOS[0]!;
 }
 
-/** Monta o personagem a partir das vagas e do progresso por etapas (id -> progresso). */
+/** Monta o personagem a partir das vagas. O XP vem só do status e das datas de cada vaga. */
 export function montarAventura(
   vagas: Vaga[],
-  progressos: Record<string, ProgressoEtapas>,
   hoje: string,
   anonimo = false,
   bonus = 0,
@@ -141,7 +123,7 @@ export function montarAventura(
     id: v.id,
     empresa: v.empresa,
     cargo: v.cargo,
-    xp: xpDaVaga(v, hoje, progressos[v.id]),
+    xp: xpDaVaga(v, hoje),
   }));
   const xp = itens.reduce((soma, i) => soma + i.xp, 0) + bonus;
   const nivel = nivelDoXp(xp);

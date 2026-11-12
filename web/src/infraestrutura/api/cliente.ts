@@ -1,6 +1,6 @@
 // Cliente HTTP do BFF. Única parte da interface que sabe as URLs.
 import type {
-  Aventura, Conquista, EntradaAnalise, Metricas, Missoes, NovaVaga, ProgressoEtapas, ResultadoAnalise, Status, TipoMissao, Vaga,
+  Aventura, Conquista, EntradaAnalise, Metricas, Missoes, NovaVaga, ResultadoAnalise, Status, TipoMissao, Vaga,
 } from "../../dominio/tipos";
 
 export class ErroApi extends Error {
@@ -66,9 +66,6 @@ export const api = {
 
   marcarMissao: (id: Exclude<TipoMissao, "candidaturas">, feita: boolean) =>
     requisitar<Missoes>(`/api/missoes/${id}`, { method: "POST", body: JSON.stringify({ feita }) }),
-
-  registrarProgresso: (entrada: { empresa: string; cargo: string } & ProgressoEtapas) =>
-    requisitar<{ id: string }>("/api/aventura/progresso", { method: "POST", body: JSON.stringify(entrada) }),
 
   excluirVaga: (id: string, anonimo: boolean) =>
     requisitar<void>(
