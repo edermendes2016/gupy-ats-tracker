@@ -9,7 +9,7 @@ import unicodedata
 from datetime import date
 from pathlib import Path
 
-from . import armazenamento, relatorio, vazamento
+from . import armazenamento, planilha, relatorio, vazamento
 from .modelo import (AREAS, CORTE_VIABILIDADE, PESOS, SENIORIDADES, STATUS,
                      calcular_match_score, classificar, validar_vaga)
 
@@ -27,9 +27,18 @@ def _achar(vagas: list[dict], id_vaga: str) -> dict:
     return candidatas[0]
 
 
+def _texto(valor: str | None) -> str | None:
+    """Texto digitado, ou o conteúdo de um arquivo se começar com '@' (ex.: @vaga.txt)."""
+    if valor and valor.startswith("@"):
+        return Path(valor[1:]).read_text(encoding="utf-8").strip()
+    return valor
+
+
 def cmd_adicionar(args, caminho: Path) -> int:
     vagas = armazenamento.carregar(caminho)
     criterios = {nome: getattr(args, nome) for nome in PESOS}
+    if args.curriculo == "outro" and not args.nome_curriculo:
+        raise SystemExit("erro: com --curriculo outro, informe o nome do arquivo com --nome-curriculo")
     vaga = {
         "id": f"{args.data}-{_slug(args.empresa)}-{_slug(args.cargo)}",
         "data": args.data,
@@ -43,6 +52,12 @@ def cmd_adicionar(args, caminho: Path) -> int:
         "criterios": criterios,
         "palavras_chave": args.palavra_chave or [],
         "lacunas": args.lacuna or [],
+        "fonte": args.fonte,
+        "curriculo": args.curriculo,
+        "nome_curriculo": args.nome_curriculo,
+        "descricao": _texto(args.descricao),
+        "responsabilidades": _texto(args.responsabilidades),
+        "requisitos": _texto(args.requisitos),
         "historico": [{"data": args.data, "status": args.status}],
     }
     vaga = {k: v for k, v in vaga.items() if v not in (None, "")}
@@ -72,6 +87,9 @@ def cmd_status(args, caminho: Path) -> int:
 
 def cmd_ranking(args, caminho: Path) -> int:
     vagas = armazenamento.carregar(caminho)
+    if args.planilha:
+        novas, existentes = planilha.exportar(Path(args.planilha), vagas)
+        print(f"planilha {args.planilha}: {novas} vaga(s) adicionada(s), {existentes} já estavam lá")
     if args.anonimo:
         vagas = relatorio.anonimizar(vagas)
     print(relatorio.tabela_terminal(vagas))
@@ -130,6 +148,13 @@ def criar_parser() -> argparse.ArgumentParser:
         a.add_argument(f"--{nome}", type=int, required=True, metavar="0-100", help=f"peso {peso}%%")
     a.add_argument("--palavra-chave", action="append", help="palavra-chave da vaga presente no currículo (repetível)")
     a.add_argument("--lacuna", action="append", help="requisito da vaga que o currículo não cobre (repetível)")
+    a.add_argument("--fonte", default="Gupy", help="onde a vaga foi encontrada (padrão: Gupy)")
+    a.add_argument("--curriculo", choices=["perfil-gupy", "outro"], default="perfil-gupy",
+                   help="currículo usado na candidatura (padrão: o do perfil Gupy)")
+    a.add_argument("--nome-curriculo", help="nome do arquivo quando --curriculo outro (só o nome, não o conteúdo)")
+    a.add_argument("--descricao", help="campo 'Descrição da vaga' da Gupy (texto ou @arquivo.txt)")
+    a.add_argument("--responsabilidades", help="campo 'Responsabilidades e atribuições' (texto ou @arquivo.txt)")
+    a.add_argument("--requisitos", help="campo 'Requisitos e qualificações' (texto ou @arquivo.txt)")
     a.set_defaults(func=cmd_adicionar, escrita=True)
 
     s = sub.add_parser("status", help="atualiza o status de uma vaga")
@@ -140,6 +165,8 @@ def criar_parser() -> argparse.ArgumentParser:
 
     r = sub.add_parser("ranking", help="mostra o ranking no terminal")
     r.add_argument("--anonimo", action="store_true")
+    r.add_argument("--planilha", metavar="ARQUIVO.xlsx",
+                   help="preenche a planilha de controle com as vagas (uma linha por vaga, sem duplicar)")
     r.set_defaults(func=cmd_ranking)
 
     m = sub.add_parser("metricas", help="funil e taxa de conversão em JSON")
