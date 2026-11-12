@@ -16,6 +16,10 @@ Depois abra **http://127.0.0.1:3000** no navegador.
 
 O passo a passo completo, com Windows, macOS e Linux, está na wiki: **[Como instalar e rodar com Docker](docs/docker.md)**.
 
+## Primeiro cadastro (tutorial)
+
+Na primeira visita, o painel abre um tour de 5 passos: enviar o currículo, cadastrar a vaga em **Nova vaga**, entender o score e os critérios e ver o resultado em **Ranking** e **Vagas**. Use **Pular** para fechar; o botão **Tutorial** no topo reabre quando quiser. A escolha fica só no navegador (localStorage), sem backend.
+
 ## Exemplo no terminal
 
 Também há uma versão de linha de comando, que só precisa de Python 3.10+ e não usa dependências:
