@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMetricas } from "../../aplicacao/consultas";
 import { ROTULO_STATUS, STATUS, type Metricas, type Termo } from "../../dominio/tipos";
-import { montarCartao, textoCartao } from "../../dominio/cartao";
+import { ASSUNTO_CARTAO, linksCompartilhamento, montarCartao, textoCartao, urlPublica } from "../../dominio/cartao";
 import { gerarPng } from "../cartao/png";
 
 const pct = (parte: number, todo: number) => (todo ? Math.round((100 * parte) / todo) : 0);
@@ -101,12 +101,19 @@ function CompartilharCartao({ m, anonimo }: { m: Metricas; anonimo: boolean }) {
   const [aviso, setAviso] = useState<string | null>(null);
   const cartao = montarCartao(m);
   const texto = textoCartao(cartao);
+  const podeNativo = typeof navigator !== "undefined" && typeof navigator.share === "function";
+
+  async function obterPng(): Promise<Blob> {
+    if (png) return png.blob;
+    const blob = await gerarPng(cartao);
+    setPng({ url: URL.createObjectURL(blob), blob });
+    return blob;
+  }
 
   async function gerar() {
     setAviso(null);
     try {
-      const blob = await gerarPng(cartao);
-      setPng({ url: URL.createObjectURL(blob), blob });
+      await obterPng();
     } catch (erro) {
       setAviso((erro as Error).message);
     }
@@ -121,11 +128,30 @@ function CompartilharCartao({ m, anonimo }: { m: Metricas; anonimo: boolean }) {
     }
   }
 
+  // Folha de compartilhamento do sistema. Envia o PNG junto quando o aparelho aceita arquivos.
+  async function compartilharNativo() {
+    setAviso(null);
+    try {
+      const url = urlPublica(window.location);
+      const dados: ShareData = { title: ASSUNTO_CARTAO, text: texto, ...(url ? { url } : {}) };
+      const blob = await obterPng();
+      const arquivo = new File([blob], "gupy-tracker-metricas.png", { type: "image/png" });
+      if (navigator.canShare?.({ files: [arquivo] })) {
+        await navigator.share({ ...dados, files: [arquivo] });
+      } else {
+        await navigator.share(dados);
+      }
+    } catch (erro) {
+      if ((erro as Error).name !== "AbortError") setAviso("Não consegui abrir o compartilhamento. Use os links abaixo.");
+    }
+  }
+
   if (!anonimo) {
     return (
       <section className="compartilhar" aria-label="Compartilhar">
         <h3>Compartilhar</h3>
         <div className="barra">
+          <button disabled>Compartilhar</button>
           <button disabled>Gerar imagem</button>
           <button disabled>Copiar texto</button>
         </div>
@@ -134,15 +160,29 @@ function CompartilharCartao({ m, anonimo }: { m: Metricas; anonimo: boolean }) {
     );
   }
 
+  const url = urlPublica(window.location);
+  const links = linksCompartilhamento(texto, url);
+
   return (
     <section className="compartilhar" aria-label="Compartilhar">
       <h3>Compartilhar</h3>
       <p className="ajuda">Só aparecem totais e termos do perfil. Nada de empresas, vagas ou links.</p>
       <div className="barra">
+        {podeNativo && <button onClick={compartilharNativo}>Compartilhar</button>}
         <button onClick={gerar}>Gerar imagem</button>
         <button onClick={copiar}>Copiar texto</button>
         {png && <a className="botao" href={png.url} download="gupy-tracker-metricas.png">Baixar PNG</a>}
       </div>
+      <ul className="redes" aria-label="Compartilhar em redes sociais">
+        {links.map((l) => (
+          <li key={l.id}>
+            <a className="botao" href={l.href} target="_blank" rel="noopener noreferrer">{l.nome}</a>
+          </li>
+        ))}
+      </ul>
+      {links.some((l) => l.id === "linkedin") && (
+        <p className="ajuda">No LinkedIn o texto não vai pré-preenchido: use “Copiar texto” e cole na publicação.</p>
+      )}
       {aviso && <p role="status" className="ajuda">{aviso}</p>}
       {png && <img src={png.url} alt="Cartão com as métricas anônimas" className="previa-cartao" />}
       <pre className="texto-cartao">{texto}</pre>

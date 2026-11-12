@@ -85,3 +85,44 @@ button:disabled { opacity: 0.6; cursor: default; }
 .resposta-gupy textarea { width: 100%; box-sizing: border-box; font: inherit; padding: 8px 10px; border: 1px solid var(--borda); border-radius: 8px; resize: vertical; }
 .resposta-rodape { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .resposta-rodape button { padding: 4px 12px; }
+
+/* Painel de métricas: espaçamento entre números e rótulos, grade e listas. */
+.painel { display: grid; gap: 20px; }
+.painel h3 { font-size: 1.05rem; margin: 0 0 4px; }
+.painel .ajuda { margin: 0 0 10px; font-size: 0.9rem; }
+.cartoes { margin-bottom: 4px; }
+.cartao { gap: 6px; min-height: 92px; justify-content: space-between; }
+.cartao .num { line-height: 1.1; margin: 0; overflow-wrap: anywhere; }
+.cartao > span:last-child { color: var(--suave); font-size: 0.92rem; line-height: 1.35; }
+.grade-painel { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px 24px; align-items: start; }
+.grade-painel > section { min-width: 0; }
+.barras { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.barras li { display: grid; grid-template-columns: minmax(90px, 0.9fr) minmax(80px, 2fr) 3ch; gap: 10px; align-items: center; }
+.barra-rotulo { overflow-wrap: anywhere; font-size: 0.92rem; }
+.barra-trilho { display: block; height: 10px; background: var(--borda); border-radius: 999px; overflow: hidden; }
+.barra-valor { display: block; height: 100%; background: var(--destaque); border-radius: 999px; min-width: 2px; }
+.barra-numero { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.tabela-simples { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.tabela-simples th, .tabela-simples td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--borda); font-variant-numeric: tabular-nums; }
+.tabela-simples th { color: var(--suave); font-weight: 600; }
+.colunas { display: flex; align-items: flex-end; gap: 8px; height: 170px; padding-top: 4px; border-bottom: 1px solid var(--borda); }
+.coluna { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; }
+.coluna-valor { font-size: 0.85rem; font-variant-numeric: tabular-nums; font-weight: 600; }
+.coluna-barra { display: block; width: 100%; max-width: 40px; background: var(--destaque); border-radius: 6px 6px 0 0; min-height: 2px; }
+.coluna-mes { font-size: 0.8rem; color: var(--suave); white-space: nowrap; margin-bottom: 2px; }
+.painel details { margin-top: 10px; }
+.painel summary { cursor: pointer; color: var(--destaque); }
+.compartilhar { border-top: 1px solid var(--borda); padding-top: 16px; }
+.compartilhar .barra { margin-bottom: 12px; }
+.compartilhar .botao { display: inline-block; padding: 6px 12px; border: 1px solid var(--borda); border-radius: 8px; color: var(--texto); text-decoration: none; background: var(--fundo); }
+.redes { list-style: none; margin: 0 0 6px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.previa-cartao { display: block; width: 100%; max-width: 360px; height: auto; border: 1px solid var(--borda); border-radius: 10px; margin: 12px 0; }
+.texto-cartao { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--fundo); border: 1px solid var(--borda); border-radius: 8px; padding: 12px; margin: 12px 0 0; font: inherit; font-size: 0.92rem; }
+@media (max-width: 600px) {
+  .grade-painel { grid-template-columns: 1fr; }
+  .cartoes { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .cartao .num { font-size: 1.5rem; }
+  .barras li { grid-template-columns: minmax(0, 1fr) 3ch; }
+  .barra-trilho { grid-column: 1 / -1; grid-row: 2; }
+  .barra-numero { grid-row: 1; grid-column: 2; }
+}

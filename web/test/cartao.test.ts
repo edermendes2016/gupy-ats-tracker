@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { montarCartao, textoCartao } from "../src/dominio/cartao";
+import { linksCompartilhamento, montarCartao, textoCartao, urlPublica } from "../src/dominio/cartao";
 import type { Metricas } from "../src/dominio/tipos";
 
 const METRICAS: Metricas = {
@@ -29,5 +29,42 @@ describe("cartão de compartilhamento", () => {
     expect(texto).not.toMatch(/\d{4}-\d{2}-\d{2}/);
     expect(texto).not.toMatch(/Empresa|gupy\.io/i);
     expect(texto).toContain("Pontos fortes: Python");
+  });
+});
+
+describe("links de compartilhamento", () => {
+  const texto = textoCartao(montarCartao(METRICAS));
+  const links = linksCompartilhamento(texto, "https://exemplo.test/app");
+
+  it("oferece as redes pedidas", () => {
+    expect(links.map((l) => l.id)).toEqual(["linkedin", "x", "facebook", "whatsapp", "telegram", "email"]);
+  });
+
+  it("codifica o texto e a URL sem perder conteúdo", () => {
+    const x = links.find((l) => l.id === "x")!;
+    expect(new URL(x.href).searchParams.get("text")).toBe(texto);
+    const fb = links.find((l) => l.id === "facebook")!;
+    expect(new URL(fb.href).searchParams.get("u")).toBe("https://exemplo.test/app");
+  });
+
+  it("e-mail usa assunto e corpo", () => {
+    const mail = links.find((l) => l.id === "email")!;
+    expect(mail.href.startsWith("mailto:?subject=")).toBe(true);
+    expect(decodeURIComponent(mail.href).endsWith(texto)).toBe(true);
+  });
+
+  it("urlPublica descarta query e hash", () => {
+    expect(urlPublica({ protocol: "https:", hostname: "a.test", origin: "https://a.test", pathname: "/x" })).toBe("https://a.test/x");
+  });
+
+  it("urlPublica ignora endereços locais", () => {
+    for (const hostname of ["localhost", "127.0.0.1", "192.168.0.10", "10.0.0.2", "172.20.1.1"]) {
+      expect(urlPublica({ protocol: "http:", hostname, origin: `http://${hostname}`, pathname: "/" })).toBeNull();
+    }
+  });
+
+  it("sem URL pública, LinkedIn e Facebook somem e as redes de texto continuam", () => {
+    const ids = linksCompartilhamento(texto, null).map((l) => l.id);
+    expect(ids).toEqual(["x", "whatsapp", "telegram", "email"]);
   });
 });

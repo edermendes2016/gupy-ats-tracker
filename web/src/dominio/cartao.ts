@@ -37,3 +37,46 @@ export function textoCartao(c: Cartao): string {
   linhas.push("", c.rodape);
   return linhas.join("\n");
 }
+
+export const ASSUNTO_CARTAO = "Minha busca de emprego em números";
+
+export interface LinkRede {
+  id: string;
+  nome: string;
+  href: string;
+}
+
+/**
+ * Links de compartilhamento para as principais redes. Recebem só o texto do cartão e a
+ * URL pública da página (sem query nem hash). Sem URL pública (instalação local), LinkedIn e
+ * Facebook não aparecem, porque só compartilham um link. LinkedIn também não aceita texto
+ * pré-preenchido: por isso o botão de copiar fica ao lado.
+ */
+export function linksCompartilhamento(texto: string, url: string | null): LinkRede[] {
+  const t = encodeURIComponent(texto);
+  const links: LinkRede[] = [];
+  if (url) {
+    const u = encodeURIComponent(url);
+    links.push({ id: "linkedin", nome: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${u}` });
+  }
+  links.push({ id: "x", nome: "X", href: `https://x.com/intent/post?text=${t}` });
+  if (url) {
+    links.push({ id: "facebook", nome: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}` });
+  }
+  links.push({ id: "whatsapp", nome: "WhatsApp", href: `https://wa.me/?text=${t}` });
+  links.push({
+    id: "telegram",
+    nome: "Telegram",
+    href: url ? `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${t}` : `https://t.me/share/url?text=${t}`,
+  });
+  links.push({ id: "email", nome: "E-mail", href: `mailto:?subject=${encodeURIComponent(ASSUNTO_CARTAO)}&body=${t}` });
+  return links;
+}
+
+const LOCAIS = /^(localhost|.*\.local|127\.\d+\.\d+\.\d+|0\.0\.0\.0|\[?::1\]?|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)$/;
+
+/** URL pública da página, sem query string nem hash. Null quando o endereço é local (ex.: localhost). */
+export function urlPublica(loc: { protocol: string; hostname: string; origin: string; pathname: string }): string | null {
+  if (!/^https?:$/.test(loc.protocol) || LOCAIS.test(loc.hostname)) return null;
+  return `${loc.origin}${loc.pathname}`;
+}
