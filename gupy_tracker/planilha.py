@@ -69,13 +69,55 @@ def _linhas(xml: str) -> dict[int, tuple[str, dict[str, str], dict[str, str]]]:
     return linhas
 
 
+def _textos_de(linha) -> dict[str, str]:
+    return linha[2]
+
+
 def _ja_existe(textos: dict[str, str], vaga: dict) -> bool:
     return (textos.get("B", "").strip().casefold() == vaga["empresa"].strip().casefold()
             and textos.get("C", "").strip().casefold() == vaga["cargo"].strip().casefold())
 
 
+def _linha_de(vaga: dict, n: int, linhas: dict, xml_estilos: dict) -> str:
+    valores = valores_da_vaga(vaga)
+    celulas = "".join(_celula(col, n, valor, xml_estilos.get(col)) for col, valor in zip(COLUNAS, valores))
+    return celulas
+
+
+def _atualizar_linha(xml: str, n: int, vaga: dict, textos: dict, estilos: dict) -> tuple[str, bool]:
+    """Preenche as colunas da linha que já existe com os valores da vaga (sem duplicar).
+
+    Só mexe em colunas que estão vazias ou diferentes: data, empresa e cargo ficam como estão.
+    Devolve (xml novo, se algo mudou).
+    """
+    valores = valores_da_vaga(vaga)
+    colunas_novas = {}
+    for col, valor in zip(COLUNAS, valores):
+        if col in "ABC":
+            continue
+        if valor in ("", None):
+            continue
+        atual = textos.get(col, "")
+        if str(atual).strip() != str(valor).strip():
+            colunas_novas[col] = valor
+    if not colunas_novas:
+        return xml, False
+    m = re.search(r'<row r="%d"([^>]*?)(?:/>|>(.*?)</row>)' % n, xml, re.S)
+    atuais = {c.group(1): c.group(0) for c in re.finditer(r'<c r="([A-Z]+)\d+"[^>]*?(?:/>|>.*?</c>)', m.group(2) or "", re.S)}
+    for col, valor in colunas_novas.items():
+        atuais[col] = _celula(col, n, valor, estilos.get(col))
+    corpo = "".join(atuais[c] for c in COLUNAS if c in atuais)
+    nova = f'<row r="{n}"{m.group(1)}>{corpo}</row>'
+    return xml[:m.start()] + nova + xml[m.end():], True
+
+
 def exportar(caminho: Path, vagas: list[dict]) -> tuple[int, int]:
-    """Acrescenta uma linha por vaga nova. Devolve (adicionadas, já_existiam)."""
+    """Acrescenta uma linha por vaga nova e completa as colunas de linhas já existentes.
+
+    Devolve (adicionadas, já_existiam). Uma vaga já na planilha (mesma empresa e cargo)
+    não ganha linha nova, mas suas colunas vazias (palavras-chave, lacunas, link...) são
+    preenchidas com os dados atuais da vaga.
+    """
     with zipfile.ZipFile(caminho) as z:
         conteudo = {nome: z.read(nome) for nome in z.namelist()}
         infos = {i.filename: i for i in z.infolist()}
@@ -87,10 +129,17 @@ def exportar(caminho: Path, vagas: list[dict]) -> tuple[int, int]:
     livres = sorted(n for n in range(PRIMEIRA_LINHA_DADOS, ultima + 1)
                     if n not in existentes or not existentes[n].get("B"))
     adicionadas = ja_existiam = 0
+    atualizadas_xml = False
 
     for vaga in vagas:
-        if any(_ja_existe(t, vaga) for t in existentes.values()):
+        achada = next((n for n, t in existentes.items() if _ja_existe(t, vaga)), None)
+        if achada is not None:
             ja_existiam += 1
+            xml, mudou = _atualizar_linha(xml, achada, vaga, existentes[achada], linhas[achada][1])
+            if mudou:
+                linhas = _linhas(xml)
+                existentes[achada] = {**existentes[achada], **{k: v for k, v in _textos_de(linhas[achada]).items()}}
+                atualizadas_xml = True
             continue
         if livres:
             n = livres.pop(0)
@@ -116,7 +165,7 @@ def exportar(caminho: Path, vagas: list[dict]) -> tuple[int, int]:
         existentes[n] = {"B": vaga["empresa"], "C": vaga["cargo"]}
         adicionadas += 1
 
-    if adicionadas:
+    if adicionadas or atualizadas_xml:
         fim = max(linhas)
         xml = re.sub(r'<dimension ref="A1:H\d+"/>', f'<dimension ref="A1:H{fim}"/>', xml, count=1)
         conteudo[ABA] = xml.encode("utf-8")

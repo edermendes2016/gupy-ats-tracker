@@ -176,6 +176,21 @@ class PlanilhaDeControle(unittest.TestCase):
                 self.assertIn(f"<t xml:space=\"preserve\">{texto}</t>", xml)
             self.assertEqual(xml.count("<t xml:space=\"preserve\">Alfa</t>"), 1)
 
+    def test_reexportar_completa_colunas_vazias_sem_duplicar(self):
+        """Regressão: vaga exportada antes de ter palavras-chave e link não os recebia depois."""
+        from gupy_tracker import planilha
+        with tempfile.TemporaryDirectory() as d:
+            caminho = self._planilha(d)
+            antiga = {**vaga("a", "Alfa", 80), "cargo": "Dev", "data": "2026-03-01", "palavras_chave": [], "lacunas": []}
+            self.assertEqual(planilha.exportar(caminho, [antiga]), (1, 0))
+            nova = {**antiga, "palavras_chave": ["Python", "SQL"], "lacunas": ["Power BI"],
+                    "url": "https://alfa.gupy.io/job/1"}
+            self.assertEqual(planilha.exportar(caminho, [nova]), (0, 1))
+            xml = self._xml(caminho)
+            for texto in ("Python, SQL", "Power BI", "https://alfa.gupy.io/job/1"):
+                self.assertIn(f"<t xml:space=\"preserve\">{texto}</t>", xml)
+            self.assertEqual(xml.count("<t xml:space=\"preserve\">Alfa</t>"), 1)
+
     def test_escapa_caracteres_especiais(self):
         from gupy_tracker import planilha
         with tempfile.TemporaryDirectory() as d:
