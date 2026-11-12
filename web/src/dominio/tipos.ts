@@ -140,3 +140,18 @@ export interface Metricas {
   pontosFortes: Termo[];
   lacunas: Termo[];
 }
+
+export interface ProgressoEtapas {
+  atual: number;
+  total: number;
+}
+
+/** Personagem da aba Aventura (XP calculado no BFF). */
+export interface Aventura {
+  nivel: number;
+  titulo: string;
+  xp: number;
+  xpNivelAtual: number;
+  xpProximoNivel: number;
+  vagas: Array<{ id: string; empresa: string; cargo: string; xp: number }>;
+}

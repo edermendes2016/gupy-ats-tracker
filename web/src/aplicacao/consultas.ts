@@ -19,6 +19,18 @@ export function useVaga(id: string | null, anonimo: boolean) {
   });
 }
 
+export function useAventura(anonimo: boolean, habilitado = true) {
+  return useQuery({ queryKey: ["aventura", anonimo], queryFn: () => api.aventura(anonimo), enabled: habilitado });
+}
+
+export function useRegistrarProgresso() {
+  const cliente = useQueryClient();
+  return useMutation({
+    mutationFn: api.registrarProgresso,
+    onSuccess: () => cliente.invalidateQueries({ queryKey: ["aventura"] }),
+  });
+}
+
 export function useMetricas() {
   return useQuery({ queryKey: ["metricas"], queryFn: api.metricas });
 }

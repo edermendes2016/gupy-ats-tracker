@@ -10,6 +10,7 @@ import {
   ErroNaoEncontrada,
 } from "../../aplicacao/erros.js";
 import type { Metricas, Vaga } from "../../dominio/vaga.js";
+import { z as zod } from "zod";
 import {
   AnonimoQuery,
   AnalisarBody,
@@ -19,6 +20,15 @@ import {
   IdParams,
   NovaVagaBody,
 } from "./esquemas.js";
+
+const ProgressoEtapasBody = zod
+  .object({
+    empresa: zod.string().trim().min(1),
+    cargo: zod.string().trim().min(1),
+    atual: zod.number().int().min(0),
+    total: zod.number().int().min(1),
+  })
+  .refine((c) => c.atual <= c.total, { message: "atual não pode passar de total", path: ["atual"] });
 
 /** Formato JSON de uma vaga, em camelCase, como a interface espera. */
 export const vagaJson = (v: Vaga) => v;
@@ -117,6 +127,16 @@ export function criarApp(
   });
 
   app.get("/api/metricas", async (): Promise<Metricas> => casos.metricas());
+
+  app.get("/api/aventura", async (req) => {
+    const { anonimo } = validar(AnonimoQuery, req.query);
+    return casos.aventura(anonimo);
+  });
+
+  app.post("/api/aventura/progresso", async (req) => {
+    const corpo = validar(ProgressoEtapasBody, req.body);
+    return casos.registrarProgresso(corpo);
+  });
 
   app.post("/api/analises", async (req) => {
     const corpo = validar(AnalisarBody, req.body);
