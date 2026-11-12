@@ -78,6 +78,20 @@ git config core.hooksPath scripts/hooks
 
 Depois disso, todo `git commit` verifica se o nome de alguma empresa das suas vagas aparece nos arquivos e, se aparecer, o commit é bloqueado. Para rodar a verificação na mão: `python -m gupy_tracker verificar`.
 
+#### Análise automática do currículo
+
+Em vez de digitar as notas, o programa lê o currículo e a vaga e calcula tudo sozinho. Não usa API paga nem internet: é uma comparação por regras, com dicionário de tecnologias.
+
+Salve o currículo como `.txt`, `.md`, `.docx` ou `.pdf` com texto selecionável (um PDF escaneado, feito de imagem, não tem texto para ler). Copie os campos da vaga para arquivos `.txt` e rode:
+
+```bash
+python -m gupy_tracker analisar --cv curriculo.txt --descricao @descricao.txt --responsabilidades @responsabilidades.txt --requisitos @requisitos.txt
+```
+
+No Windows, use `py -m gupy_tracker ...` no lugar de `python -m gupy_tracker`. Para gravar a vaga com a análise, acrescente `--salvar --empresa "Nome" --cargo "Cargo" --url "https://..."`.
+
+A análise mostra os cinco critérios, o Match Score, as palavras-chave que o currículo comprova, as lacunas e avisos. Requisitos sem tecnologia reconhecível, ou sem anos de experiência informados, ficam com nota neutra (50) e aparecem no aviso. Confira sempre o resultado antes de gravar.
+
 ### Onde ficam os dados
 
 Por padrão, em `private/vagas.json`. Para guardar em outro lugar (uma pasta sincronizada, por exemplo), passe `--dados caminho/vagas.json` antes do comando ou defina a variável de ambiente `GUPY_TRACKER_DADOS`.
