@@ -112,9 +112,29 @@ export interface NovaVaga {
   requisitos?: string;
 }
 
+export interface Termo {
+  nome: string;
+  vagas: number;
+}
+
+export interface PontoEvolucao {
+  mes: string; // AAAA-MM
+  analisadas: number;
+  enviadas: number;
+  entrevistas: number;
+}
+
+/** Painel de métricas. Agregados só: nada aqui identifica empresa, vaga ou link. */
 export interface Metricas {
   total: number;
   enviadas: number;
   chegaramEntrevista: number;
   taxaConversao: number;
+  ofertas: number;
+  scoreMedio: number;
+  porStatus: Array<{ status: Status | string; vagas: number }>;
+  faixas: Array<{ faixa: string; enviadas: number; entrevistas: number }>;
+  evolucao: PontoEvolucao[];
+  pontosFortes: Termo[];
+  lacunas: Termo[];
 }
