@@ -27,6 +27,7 @@ function dependencias() {
     obter: vi.fn(async () => VAGA),
     registrar: vi.fn(async () => VAGA),
     atualizarStatus: vi.fn(async () => VAGA),
+    excluir: vi.fn(async () => undefined),
   };
   const ranking: RankingRepositorio = {
     ranking: vi.fn(async () => [VAGA]),

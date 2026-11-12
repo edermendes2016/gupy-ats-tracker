@@ -37,6 +37,10 @@ export function criarCasosDeUso(dep: Dependencias) {
       return dep.vagas.atualizarStatus(id, status, data ?? hoje());
     },
 
+    excluirVaga(id: string, anonimo = false): Promise<void> {
+      return dep.vagas.excluir(id, anonimo);
+    },
+
     ranking(anonimo = false): Promise<Vaga[]> {
       return dep.ranking.ranking(anonimo);
     },
@@ -51,6 +55,10 @@ export function criarCasosDeUso(dep: Dependencias) {
 
     exportarPlanilha(caminho: string): Promise<{ novas: number; existentes: number }> {
       return dep.planilha.exportar(caminho);
+    },
+
+    gerarPlanilha(caminho: string): Promise<void> {
+      return dep.planilha.gerarModelo(caminho);
     },
   };
 }

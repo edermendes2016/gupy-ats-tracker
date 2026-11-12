@@ -56,7 +56,7 @@ export function App() {
             {ranking.isPending && <p>Carregando…</p>}
             {ranking.isError && <p role="alert" className="erro">{ranking.error.message}</p>}
             {ranking.data && (
-              <TabelaVagas vagas={ranking.data} anonimo={anonimo} editavel={false} onSelecionar={setSelecionada} />
+              <TabelaVagas vagas={ranking.data} anonimo={anonimo} editavel={false} excluivel onSelecionar={setSelecionada} />
             )}
           </section>
         )}

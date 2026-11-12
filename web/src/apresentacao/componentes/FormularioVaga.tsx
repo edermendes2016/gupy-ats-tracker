@@ -51,6 +51,9 @@ export function FormularioVaga({ aoCriar }: { aoCriar: () => void }) {
           setCriterios(r.criterios);
           setPalavras(r.palavrasChave.join(", "));
           setLacunas(r.lacunas.join(", "));
+          // O link da vaga vem do próprio texto colado, se ele trouxer um; senão, fica como digitado.
+          const link = descricao.match(/https?:\/\/[^\s)<>"]+/);
+          if (link && !url) setUrl(link[0]);
         },
       },
     );

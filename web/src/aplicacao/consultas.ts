@@ -34,6 +34,22 @@ export function useRegistrarVaga() {
   return useMutation({ mutationFn: api.registrarVaga, onSuccess: invalidar });
 }
 
+export function useExcluirVaga() {
+  const invalidar = useInvalidarTudo();
+  return useMutation({
+    mutationFn: ({ id, anonimo }: { id: string; anonimo: boolean }) => api.excluirVaga(id, anonimo),
+    onSuccess: invalidar,
+  });
+}
+
+export function useEscolherPlanilha() {
+  return useMutation({ mutationFn: api.escolherPlanilha });
+}
+
+export function useGerarPlanilha() {
+  return useMutation({ mutationFn: api.gerarPlanilha });
+}
+
 export function useAnalisarCurriculo() {
   return useMutation({ mutationFn: api.analisarCurriculo });
 }
