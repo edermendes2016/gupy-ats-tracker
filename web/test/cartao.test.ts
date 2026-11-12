@@ -60,9 +60,7 @@ describe("links de compartilhamento", () => {
 
   it("oferece as redes pedidas", () => {
     expect(links.map((l) => l.id)).toEqual(["linkedin", "x", "facebook", "whatsapp", "telegram", "email"]);
-    expect(links.find((l) => l.id === "linkedin")?.href).toBe(
-      "https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fexemplo.test%2Fapp",
-    );
+    expect(links.find((l) => l.id === "linkedin")?.href).toBe("https://www.linkedin.com/feed/?shareActive=true");
   });
 
   it("codifica o texto e a URL sem perder conteúdo", () => {
@@ -96,7 +94,7 @@ describe("links de compartilhamento", () => {
     expect(li.anexaImagem).toBe(true);
   });
 
-  it("as redes sociais enviam a imagem ao clicar; e-mail só leva o texto", () => {
+  it("as redes que recebem imagem são marcadas; e-mail só leva o texto", () => {
     expect(links.filter((l) => l.anexaImagem).map((l) => l.id)).toEqual(["linkedin", "x", "facebook", "whatsapp", "telegram"]);
     expect(links.find((l) => l.id === "email")?.anexaImagem).toBeFalsy();
   });

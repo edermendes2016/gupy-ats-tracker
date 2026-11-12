@@ -129,6 +129,8 @@ button:disabled { opacity: 0.6; cursor: default; }
 .compartilhar .botao { display: inline-block; padding: 6px 12px; border: 1px solid var(--borda); border-radius: 8px; color: var(--texto); text-decoration: none; background: var(--fundo); }
 .compartilhar .botao-principal { background: var(--destaque); border-color: var(--destaque); color: #fff; font-weight: 600; }
 .redes { list-style: none; margin: 0 0 6px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.previa-link { display: block; max-width: 720px; }
+.passos-compartilhar { margin: 8px 0 0; padding-left: 20px; color: var(--suave); font-size: 0.92rem; display: grid; gap: 4px; }
 .previa-cartao { display: block; width: 100%; max-width: 720px; height: auto; border: 1px solid var(--borda); border-radius: 10px; margin: 12px 0; }
 .texto-cartao { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--fundo); border: 1px solid var(--borda); border-radius: 8px; padding: 12px; margin: 12px 0 0; font: inherit; font-size: 0.92rem; }
 @media (max-width: 600px) {

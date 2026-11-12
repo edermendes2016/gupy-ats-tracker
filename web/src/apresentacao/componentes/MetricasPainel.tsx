@@ -11,7 +11,6 @@ import {
   montarCartao,
   textoCartao,
   urlPublica,
-  type LinkRede,
 } from "../../dominio/cartao";
 import { gerarPng } from "../cartao/png";
 
@@ -107,17 +106,6 @@ function Evolucao({ m }: { m: Metricas }) {
 
 const paraItens = (t: Termo[]) => t.map((x) => ({ nome: x.nome, valor: x.vagas }));
 
-function baixarArquivo(blob: Blob) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "gupy-tracker-metricas.png";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
 function CompartilharCartao({ m, anonimo }: { m: Metricas; anonimo: boolean }) {
   const [png, setPng] = useState<{ url: string; blob: Blob } | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -181,19 +169,18 @@ function CompartilharCartao({ m, anonimo }: { m: Metricas; anonimo: boolean }) {
     return false;
   }
 
-  // Clique numa rede: o link abre a rede normalmente, e a imagem segue para a área de transferência.
-  async function aoCompartilharRede(rede: LinkRede) {
+  // Botão "Copiar imagem": o clique copia direto, sem navegar antes. Se o navegador
+  // não deixar, o aviso diz para usar o PNG baixado.
+  async function copiarAgora() {
     setAviso(null);
-    const blob = png?.blob ?? (await gerarPng(cartao).catch(() => null));
-    if (!blob) {
-      setAviso(`Não consegui gerar a imagem. Use o texto abaixo no ${rede.nome}.`);
+    if (!png) {
+      setAviso("A imagem ainda está sendo gerada. Tente de novo em instantes.");
       return;
     }
-    if (await copiarImagem(blob)) {
-      setAviso(`Imagem copiada: cole (Ctrl+V) na publicação do ${rede.nome}.`);
+    if (await copiarImagem(png.blob)) {
+      setAviso("Imagem copiada. No LinkedIn, cole com Ctrl+V na caixa de publicação.");
     } else {
-      baixarArquivo(blob);
-      setAviso(`Não consegui copiar a imagem, então ela foi baixada. Anexe pelo ícone de mídia do ${rede.nome}.`);
+      setAviso("Seu navegador não deixou copiar a imagem. Use Baixar PNG e anexe o arquivo pelo ícone de imagem do LinkedIn.");
     }
   }
 
@@ -235,33 +222,36 @@ function CompartilharCartao({ m, anonimo }: { m: Metricas; anonimo: boolean }) {
     <section className="compartilhar" aria-label="Compartilhar">
       <h3>Compartilhar</h3>
       <p className="ajuda">Só aparecem totais e termos do perfil. Nada de empresas, vagas ou links de vagas.</p>
-      {png && <img src={png.url} alt="Prévia do cartão com as métricas anônimas" className="previa-cartao" width={1200} height={627} />}
+      {png && (
+        <a href={png.url} target="_blank" rel="noopener noreferrer" title="Abrir a imagem em tamanho cheio" className="previa-link">
+          <img src={png.url} alt="Prévia do cartão com as métricas anônimas" className="previa-cartao" width={1200} height={627} />
+        </a>
+      )}
       <div className="barra">
         <a className="botao botao-principal" href={REPOSITORIO_URL} target="_blank" rel="noopener noreferrer">
           {CHAMADA_CARTAO}
         </a>
         {podeNativo && <button onClick={compartilharNativo}>Compartilhar</button>}
+        <button onClick={copiarAgora} disabled={!png}>Copiar imagem</button>
+        {png && (
+          <a className="botao" href={png.url} download="gupy-tracker-metricas.png">Baixar PNG</a>
+        )}
         <button onClick={() => copiar()}>Copiar texto</button>
-        {png && <a className="botao" href={png.url} download="gupy-tracker-metricas.png">Baixar imagem</a>}
       </div>
       <ul className="redes" aria-label="Compartilhar em redes sociais">
         {links.map((l) => (
           <li key={l.id}>
-            <a
-              className="botao"
-              href={l.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={l.anexaImagem ? () => aoCompartilharRede(l) : undefined}
-            >
+            <a className="botao" href={l.href} target="_blank" rel="noopener noreferrer">
               {l.nome}
             </a>
           </li>
         ))}
       </ul>
-      <p className="ajuda">
-        Nas redes, o clique abre a publicação e copia a imagem do cartão: é só colar (Ctrl+V). Se o navegador não copiar, a imagem é baixada e você anexa pelo ícone de mídia. No LinkedIn, o texto também vai junto. Por e-mail, vai só o texto.
-      </p>
+      <ol className="passos-compartilhar">
+        <li>Copie a imagem (ou baixe o PNG) e o texto abaixo.</li>
+        <li>No LinkedIn, abra a caixa de publicação com o botão de rede acima.</li>
+        <li>Cole com Ctrl+V. Se não colar, clique no ícone de imagem e anexe o PNG baixado. Confira antes de publicar.</li>
+      </ol>
       {aviso && <p role="status" className="ajuda">{aviso}</p>}
       <pre className="texto-cartao">{texto}</pre>
     </section>

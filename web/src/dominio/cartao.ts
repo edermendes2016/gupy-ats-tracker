@@ -69,8 +69,7 @@ export interface LinkRede {
   nome: string;
   href: string;
   /**
-   * Ao clicar, a imagem do cartão vai para a área de transferência (ou é baixada, se o navegador
-   * não deixar copiar). Redes não recebem imagem por link, então a pessoa cola no post.
+   * A rede não recebe a imagem pelo link: a pessoa copia ou baixa o PNG e anexa no post.
    */
   anexaImagem?: boolean;
 }
@@ -79,10 +78,9 @@ const LINKEDIN_FEED = "https://www.linkedin.com/feed/?shareActive=true";
 
 /**
  * Links de compartilhamento para as principais redes. Recebem só o texto do cartão e a
- * URL pública da página (sem query nem hash). LinkedIn aparece sempre: sem URL pública
- * (instalação local) abre o feed, e o clique copia a imagem para colar na publicação.
- * Facebook só aparece com URL pública, porque só compartilha um link.
- * E-mail não recebe imagem, então leva só o texto.
+ * URL pública da página (sem query nem hash). LinkedIn abre sempre o feed com a caixa de
+ * publicação (shareActive), onde a imagem é anexada pelo ícone de mídia. Facebook só aparece
+ * com URL pública, porque só compartilha um link. E-mail não recebe imagem, então leva só o texto.
  */
 export function linksCompartilhamento(texto: string, url: string | null): LinkRede[] {
   const t = encodeURIComponent(texto);
@@ -90,7 +88,7 @@ export function linksCompartilhamento(texto: string, url: string | null): LinkRe
     {
       id: "linkedin",
       nome: "LinkedIn",
-      href: url ? `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}` : LINKEDIN_FEED,
+      href: LINKEDIN_FEED,
       anexaImagem: true,
     },
   ];
