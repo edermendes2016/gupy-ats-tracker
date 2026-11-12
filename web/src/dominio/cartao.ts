@@ -37,3 +37,34 @@ export function textoCartao(c: Cartao): string {
   linhas.push("", c.rodape);
   return linhas.join("\n");
 }
+
+export const ASSUNTO_CARTAO = "Minha busca de emprego em números";
+
+export interface LinkRede {
+  id: string;
+  nome: string;
+  href: string;
+}
+
+/**
+ * Links de compartilhamento para as principais redes. Recebem só o texto do cartão e a
+ * URL pública da página (sem query nem hash), nunca dados do perfil além do que já está no texto.
+ * LinkedIn não aceita texto pré-preenchido: por isso o botão de copiar fica ao lado.
+ */
+export function linksCompartilhamento(texto: string, url: string): LinkRede[] {
+  const t = encodeURIComponent(texto);
+  const u = encodeURIComponent(url);
+  return [
+    { id: "linkedin", nome: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${u}` },
+    { id: "x", nome: "X", href: `https://x.com/intent/post?text=${t}` },
+    { id: "facebook", nome: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${u}` },
+    { id: "whatsapp", nome: "WhatsApp", href: `https://wa.me/?text=${t}` },
+    { id: "telegram", nome: "Telegram", href: `https://t.me/share/url?url=${u}&text=${t}` },
+    { id: "email", nome: "E-mail", href: `mailto:?subject=${encodeURIComponent(ASSUNTO_CARTAO)}&body=${t}` },
+  ];
+}
+
+/** URL pública da página, sem query string nem hash. */
+export function urlPublica(loc: { origin: string; pathname: string }): string {
+  return `${loc.origin}${loc.pathname}`;
+}
