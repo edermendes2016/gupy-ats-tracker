@@ -77,3 +77,22 @@ button:disabled { opacity: 0.6; cursor: default; }
 .dica-botao { width: 1.6em; height: 1.6em; border-radius: 50%; border: 1px solid var(--borda); background: #fff; color: #333; font-size: 0.8rem; line-height: 1; padding: 0; cursor: pointer; }
 .dica-botao:focus-visible { outline: 2px solid #3f51b5; outline-offset: 2px; }
 .dica-texto { position: absolute; z-index: 10; top: calc(100% + 6px); left: -6px; width: 260px; max-width: 80vw; padding: 8px 10px; border: 1px solid var(--borda); border-radius: 8px; background: #fff; color: #222; box-shadow: 0 4px 12px rgba(0,0,0,.15); font-size: 0.85rem; line-height: 1.35; }
+
+/* Painel de métricas */
+.painel { display: flex; flex-direction: column; gap: 16px; }
+.grade-painel { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.grade-painel section, .compartilhar { border: 1px solid var(--borda); border-radius: 10px; padding: 12px; }
+.painel h3 { margin: 0 0 8px; font-size: 1rem; }
+.barras { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.barras li { display: grid; grid-template-columns: minmax(90px, 1fr) 3fr 40px; align-items: center; gap: 8px; }
+.barra-trilho { background: var(--trilho, #e6e5e1); border-radius: 4px; height: 12px; display: block; }
+.barra-valor { display: block; height: 100%; background: #2a78d6; border-radius: 4px; min-width: 2px; }
+.barra-numero { text-align: right; font-variant-numeric: tabular-nums; }
+.colunas { display: flex; align-items: flex-end; gap: 6px; height: 160px; }
+.coluna { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+.coluna-barra { width: 100%; background: #2a78d6; border-radius: 4px 4px 0 0; min-height: 2px; }
+.coluna-valor, .coluna-mes { font-size: 0.75rem; }
+.tabela-simples { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.tabela-simples td, .tabela-simples th { text-align: left; padding: 4px; border-bottom: 1px solid var(--borda); }
+.previa-cartao { width: 100%; max-width: 360px; border: 1px solid var(--borda); border-radius: 8px; }
+.texto-cartao { white-space: pre-wrap; font-family: inherit; background: transparent; border: 1px dashed var(--borda); padding: 8px; border-radius: 8px; }
