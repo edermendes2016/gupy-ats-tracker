@@ -2,8 +2,9 @@ syntax = "proto3";
 
 package gupy_tracker.v1;
 
-import "google/protobuf/empty.proto";
 import "gupy_tracker/v1/vagas.proto";
+
+message MetricasRequest {}
 
 message RankingRequest {
   bool anonimo = 1;
@@ -22,5 +23,5 @@ message MetricasResponse {
 
 service RankingService {
   rpc Ranking(RankingRequest) returns (RankingResponse);
-  rpc Metricas(google.protobuf.Empty) returns (MetricasResponse);
+  rpc Metricas(MetricasRequest) returns (MetricasResponse);
 }
