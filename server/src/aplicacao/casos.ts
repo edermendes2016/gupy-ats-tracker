@@ -37,6 +37,10 @@ export function criarCasosDeUso(dep: Dependencias) {
       return dep.vagas.atualizarStatus(id, status, data ?? hoje());
     },
 
+    excluirVaga(id: string, anonimo = false): Promise<void> {
+      return dep.vagas.excluir(id, anonimo);
+    },
+
     ranking(anonimo = false): Promise<Vaga[]> {
       return dep.ranking.ranking(anonimo);
     },

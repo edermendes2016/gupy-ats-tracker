@@ -68,4 +68,22 @@ describe("modo anônimo", () => {
     await userEvent.click(screen.getByLabelText(/modo anônimo/i));
     await waitFor(() => expect(screen.queryByRole("button", { name: "Acme" })).toBeNull());
   });
+
+  it("exclui pelo ranking só depois de confirmar, e no modo anônimo usa o id mascarado", async () => {
+    const chamadasDelete: string[] = [];
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
+      if (init?.method === "DELETE") {
+        chamadasDelete.push(url);
+        return new Response(null, { status: 204 });
+      }
+      return new Response(JSON.stringify([VAGA]), { status: 200, headers: { "content-type": "application/json" } });
+    }));
+    renderizar();
+    const tabela = await screen.findByRole("table");
+    await userEvent.click(within(tabela).getByRole("button", { name: /Excluir Acme/ }));
+    expect(chamadasDelete).toHaveLength(0);
+    await userEvent.click(within(tabela).getByRole("button", { name: "Confirmar exclusão" }));
+    await waitFor(() => expect(chamadasDelete).toHaveLength(1));
+    expect(chamadasDelete[0]).toBe(`/api/vagas/${encodeURIComponent(VAGA.id)}`);
+  });
 });

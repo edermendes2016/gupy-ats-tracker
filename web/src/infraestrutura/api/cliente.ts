@@ -54,6 +54,12 @@ export const api = {
 
   metricas: () => requisitar<Metricas>("/api/metricas"),
 
+  excluirVaga: (id: string, anonimo: boolean) =>
+    requisitar<void>(
+      `/api/vagas/${encodeURIComponent(id)}${query({ anonimo: anonimo ? "true" : undefined })}`,
+      { method: "DELETE" },
+    ),
+
   analisarCurriculo: (entrada: EntradaAnalise) =>
     requisitar<ResultadoAnalise>("/api/analises", { method: "POST", body: JSON.stringify(entrada) }),
 

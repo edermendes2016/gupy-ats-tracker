@@ -49,3 +49,46 @@ class CasosDeUsoTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ExcluirVagaTest(unittest.TestCase):
+    def vagas(self):
+        from gupy_tracker import casos_de_uso as cu
+        lista = []
+        cu.registrar_vaga(lista, data="2026-04-01", empresa="Acme Ltda", cargo="Dev", criterios=CRITERIOS)
+        cu.registrar_vaga(lista, data="2026-04-02", empresa="Globex", cargo="Dev", criterios=CRITERIOS)
+        return lista
+
+    def test_exclui_pelo_id_exato(self):
+        from gupy_tracker import casos_de_uso as cu
+        lista = self.vagas()
+        removida = cu.excluir_vaga(lista, "2026-04-01-acme-ltda-dev")
+        self.assertEqual(removida["empresa"], "Acme Ltda")
+        self.assertEqual([v["empresa"] for v in lista], ["Globex"])
+
+    def test_id_parcial_nao_exclui_por_engano(self):
+        from gupy_tracker import casos_de_uso as cu
+        lista = self.vagas()
+        with self.assertRaises(cu.VagaNaoEncontrada):
+            cu.excluir_vaga(lista, "acme")
+        self.assertEqual(len(lista), 2)
+
+    def test_modo_anonimo_usa_o_id_mascarado_sem_expor_a_empresa(self):
+        from gupy_tracker import casos_de_uso as cu
+        from gupy_tracker import relatorio
+        lista = self.vagas()
+        mascarado = relatorio.anonimizar(lista)[1]["id"]
+        removida = cu.excluir_vaga(lista, mascarado, anonimo=True)
+        self.assertEqual(removida["empresa"], "Globex")
+        self.assertEqual(len(lista), 1)
+
+    def test_modo_anonimo_recusa_id_ambiguo(self):
+        from gupy_tracker import casos_de_uso as cu
+        from gupy_tracker import relatorio
+        lista = self.vagas()
+        # Mesma empresa e mesma data: o id mascarado fica igual e não há como escolher uma.
+        lista.append({**lista[0], "id": "2026-04-01-acme-ltda-dev-2", "cargo": "Outro"})
+        duplicado = relatorio.anonimizar(lista)[0]["id"]
+        with self.assertRaises(cu.VagaNaoEncontrada):
+            cu.excluir_vaga(lista, duplicado, anonimo=True)
+        self.assertEqual(len(lista), 3)

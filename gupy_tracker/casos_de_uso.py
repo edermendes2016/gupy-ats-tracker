@@ -9,6 +9,7 @@ import re
 import unicodedata
 
 from .modelo import CORTE_VIABILIDADE, calcular_match_score, classificar, validar_vaga
+from .relatorio import anonimizar
 
 
 class VagaInvalida(ValueError):
@@ -97,6 +98,25 @@ def registrar_vaga(
         raise VagaDuplicada(f"já existe uma vaga com id {vaga['id']}")
     vagas.append(vaga)
     return vaga
+
+
+def excluir_vaga(vagas: list[dict], id_vaga: str, anonimo: bool = False) -> dict:
+    """Remove a vaga da lista e a devolve. Não grava em disco.
+
+    Com anonimo=True, id_vaga é o id mascarado que a listagem anônima mostra. Ele é
+    traduzido de volta para a vaga real aqui no serviço, sem nunca sair dele. Se dois
+    registros ficarem com o mesmo id mascarado, a exclusão é recusada.
+    """
+    if anonimo:
+        mascarados = [i for i, p in enumerate(anonimizar(vagas)) if p["id"] == id_vaga]
+        if len(mascarados) != 1:
+            motivo = "não encontrada" if not mascarados else "ambígua: use o modo não anônimo"
+            raise VagaNaoEncontrada(f"vaga '{id_vaga}' {motivo}")
+        return vagas.pop(mascarados[0])
+    exatas = [i for i, v in enumerate(vagas) if v["id"] == id_vaga]
+    if len(exatas) != 1:
+        raise VagaNaoEncontrada(f"vaga '{id_vaga}' não encontrada")
+    return vagas.pop(exatas[0])
 
 
 def atualizar_status(vagas: list[dict], id_vaga: str, novo_status: str, data: str) -> dict:

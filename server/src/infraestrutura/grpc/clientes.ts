@@ -108,6 +108,9 @@ export function criarRepositoriosGrpc(endereco: string): Repositorios {
     async registrar(nova: NovaVaga) {
       return vagaDoProto(await chamar(vagasCli, "RegistrarVaga", novaVagaParaProto(nova)));
     },
+    async excluir(id, anonimo) {
+      await chamar(vagasCli, "ExcluirVaga", { id, anonimo });
+    },
     async atualizarStatus(id: string, status: Status, data?: string) {
       return vagaDoProto(
         await chamar(vagasCli, "AtualizarStatus", {

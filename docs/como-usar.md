@@ -92,6 +92,21 @@ No Windows, use `py -m gupy_tracker ...` no lugar de `python -m gupy_tracker`. P
 
 A análise mostra os cinco critérios, o Match Score, as palavras-chave que o currículo comprova, as lacunas e avisos. Requisitos sem tecnologia reconhecível, ou sem anos de experiência informados, ficam com nota neutra (50) e aparecem no aviso. Confira sempre o resultado antes de gravar.
 
+#### Interface web: análise automática e exclusão
+
+A interface (pasta `web/`) roda sobre o serviço Python e o BFF. Para subir tudo no Windows, em três terminais, a partir da raiz do projeto:
+
+```powershell
+py -m pip install grpcio-tools
+py scripts\gerar_proto.py
+py -m gupy_tracker.servidor_grpc
+```
+
+No segundo terminal, suba o BFF em `server\` (`npm install` na primeira vez, depois `npm start`). No terceiro, suba a interface em `web\` (`npm install` e `npm run dev`).
+
+- **Nova vaga:** envie o currículo (PDF com texto, DOCX, TXT ou MD) e cole a página da vaga. Clique em **Analisar currículo**. Os critérios, as palavras-chave e as lacunas são preenchidos e podem ser ajustados antes de salvar.
+- **Ranking:** cada linha tem **Excluir**. A exclusão só acontece depois de **Confirmar exclusão**. No modo anônimo, a exclusão usa o id mascarado da listagem, sem mostrar a empresa.
+
 ### Onde ficam os dados
 
 Por padrão, em `private/vagas.json`. Para guardar em outro lugar (uma pasta sincronizada, por exemplo), passe `--dados caminho/vagas.json` antes do comando ou defina a variável de ambiente `GUPY_TRACKER_DADOS`.
