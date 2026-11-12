@@ -115,6 +115,8 @@ function CompartilharCartao({ m, anonimo }: { m: Metricas; anonimo: boolean }) {
   // A prévia é redesenhada sempre que os números mudam. Libera a URL anterior ao trocar.
   useEffect(() => {
     if (!anonimo) return;
+    // Descarta a prévia antiga: ela não pode ser baixada nem compartilhada depois da troca de números.
+    setPng(null);
     let cancelado = false;
     let url: string | null = null;
     gerarPng(cartao)

@@ -28,6 +28,18 @@ describe("cartão de compartilhamento", () => {
     expect(c.funil).toEqual([{ nome: "Entrevista", valor: 2 }]);
   });
 
+  it("funil cabe no cartão: no máximo cinco etapas, na ordem do fluxo", () => {
+    const todas = montarCartao({
+      ...METRICAS,
+      porStatus: [
+        { status: "analisada", vagas: 1 }, { status: "descartada", vagas: 9 }, { status: "candidatada", vagas: 8 },
+        { status: "triagem", vagas: 7 }, { status: "teste", vagas: 6 }, { status: "entrevista", vagas: 5 },
+        { status: "oferta", vagas: 4 }, { status: "recusada", vagas: 3 }, { status: "desistencia", vagas: 2 },
+      ],
+    });
+    expect(todas.funil.map((b) => b.nome)).toEqual(["Descartada", "Candidatada", "Triagem", "Teste", "Entrevista"]);
+  });
+
   it("não contém empresa, link de vaga, id nem data completa", () => {
     const texto = textoCartao(montarCartao({ ...METRICAS }));
     expect(texto).not.toMatch(/\d{4}-\d{2}-\d{2}/);

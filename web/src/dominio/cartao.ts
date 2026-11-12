@@ -19,6 +19,7 @@ export interface Cartao {
 }
 
 export const LIMITE_TERMOS_CARTAO = 5;
+export const LIMITE_FUNIL_CARTAO = 5;
 
 export const REPOSITORIO_URL = "https://github.com/edermendes2016/gupy-ats-tracker";
 export const REPOSITORIO_EXIBICAO = "github.com/edermendes2016/gupy-ats-tracker";
@@ -29,7 +30,10 @@ const paraBarras = (termos: Termo[], limite: number): Barra[] =>
 
 export function montarCartao(m: Metricas, limite = LIMITE_TERMOS_CARTAO): Cartao {
   const contagem = new Map(m.porStatus.map((s) => [s.status, s.vagas]));
-  const funil = STATUS.map((s) => ({ nome: ROTULO_STATUS[s], valor: contagem.get(s) ?? 0 })).filter((b) => b.valor > 0);
+  // Cabem até cinco etapas no cartão: ficam as mais povoadas, mantendo a ordem do fluxo.
+  const funilCompleto = STATUS.map((s) => ({ nome: ROTULO_STATUS[s], valor: contagem.get(s) ?? 0 })).filter((b) => b.valor > 0);
+  const maisPovoadas = new Set([...funilCompleto].sort((a, b) => b.valor - a.valor).slice(0, LIMITE_FUNIL_CARTAO));
+  const funil = funilCompleto.filter((b) => maisPovoadas.has(b));
   return {
     titulo: "Minha busca de emprego em números",
     indicadores: [
