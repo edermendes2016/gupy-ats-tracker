@@ -1,14 +1,28 @@
 import { useState, type FormEvent } from "react";
-import { useRegistrarVaga } from "../../aplicacao/consultas";
+import { useAnalisarCurriculo, useRegistrarVaga } from "../../aplicacao/consultas";
 import {
   CRITERIOS, MODELOS, ROTULO_MODELO, ROTULO_SENIORIDADE, SENIORIDADES,
-  type Criterios, type Modelo, type NovaVaga, type Senioridade,
+  type Criterios, type Modelo, type NovaVaga, type ResultadoAnalise, type Senioridade,
 } from "../../dominio/tipos";
 
 const CRITERIOS_INICIAIS: Criterios = { obrigatorios: 0, desejaveis: 0, experiencia: 0, dominio: 0, logistica: 0 };
+const EXTENSOES = ".pdf,.docx,.txt,.md";
+
+/** Lê o arquivo como base64 (sem o prefixo data:). */
+function arquivoParaBase64(arquivo: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const leitor = new FileReader();
+    leitor.onload = () => resolve(String(leitor.result).split(",")[1] ?? "");
+    leitor.onerror = () => reject(leitor.error);
+    leitor.readAsDataURL(arquivo);
+  });
+}
 
 export function FormularioVaga({ aoCriar }: { aoCriar: () => void }) {
   const registrar = useRegistrarVaga();
+  const analisar = useAnalisarCurriculo();
+  const [arquivo, setArquivo] = useState<File | null>(null);
+  const [resultado, setResultado] = useState<ResultadoAnalise | null>(null);
   const [empresa, setEmpresa] = useState("");
   const [cargo, setCargo] = useState("");
   const [senioridade, setSenioridade] = useState<Senioridade>("nao_informada");
@@ -20,6 +34,27 @@ export function FormularioVaga({ aoCriar }: { aoCriar: () => void }) {
   const [descricao, setDescricao] = useState("");
 
   const lista = (texto: string) => texto.split(",").map((s) => s.trim()).filter(Boolean);
+
+  async function analisarVaga() {
+    if (!arquivo) return;
+    const arquivoBase64 = await arquivoParaBase64(arquivo);
+    analisar.mutate(
+      {
+        nomeArquivo: arquivo.name,
+        arquivoBase64,
+        descricao: descricao || undefined,
+        modelo: modelo || undefined,
+      },
+      {
+        onSuccess: (r) => {
+          setResultado(r);
+          setCriterios(r.criterios);
+          setPalavras(r.palavrasChave.join(", "));
+          setLacunas(r.lacunas.join(", "));
+        },
+      },
+    );
+  }
 
   function enviar(e: FormEvent) {
     e.preventDefault();
@@ -39,6 +74,37 @@ export function FormularioVaga({ aoCriar }: { aoCriar: () => void }) {
 
   return (
     <form className="formulario" onSubmit={enviar} noValidate>
+      <fieldset>
+        <legend>Análise automática</legend>
+        <div className="campos">
+          <label className="largo">Currículo (PDF com texto, DOCX, TXT ou MD)
+            <input type="file" accept={EXTENSOES} onChange={(e) => setArquivo(e.target.files?.[0] ?? null)} />
+          </label>
+          <label className="largo">Texto da vaga (cole a página da Gupy: descrição, responsabilidades e requisitos)
+            <textarea rows={6} value={descricao} onChange={(e) => setDescricao(e.target.value)} />
+          </label>
+        </div>
+        <button type="button" onClick={analisarVaga} disabled={!arquivo || !descricao.trim() || analisar.isPending}>
+          {analisar.isPending ? "Analisando…" : "Analisar currículo"}
+        </button>
+        {analisar.isError && <p role="alert" className="erro">{analisar.error.message}</p>}
+        {resultado && (
+          <div className="resultado-analise">
+            <p><strong>Match Score {resultado.matchScore}%</strong> ({resultado.classificacao}). Os campos abaixo foram preenchidos e podem ser ajustados.</p>
+            {resultado.lacunas.length > 0 && <p><strong>Gap para estudar:</strong> {resultado.lacunas.join(", ")}</p>}
+            {resultado.sugestoes.length > 0 && (
+              <>
+                <p><strong>Sugestões para o currículo:</strong></p>
+                <ul>{resultado.sugestoes.map((s) => <li key={s}>{s}</li>)}</ul>
+              </>
+            )}
+            {resultado.avisos.length > 0 && (
+              <ul className="avisos">{resultado.avisos.map((a) => <li key={a}>{a}</li>)}</ul>
+            )}
+          </div>
+        )}
+      </fieldset>
+
       <div className="campos">
         <label>Empresa<input required value={empresa} onChange={(e) => setEmpresa(e.target.value)} /></label>
         <label>Cargo<input required value={cargo} onChange={(e) => setCargo(e.target.value)} /></label>
@@ -76,9 +142,6 @@ export function FormularioVaga({ aoCriar }: { aoCriar: () => void }) {
         </label>
         <label className="largo">Lacunas (separadas por vírgula)
           <input value={lacunas} onChange={(e) => setLacunas(e.target.value)} />
-        </label>
-        <label className="largo">Descrição
-          <textarea rows={4} value={descricao} onChange={(e) => setDescricao(e.target.value)} />
         </label>
       </div>
 

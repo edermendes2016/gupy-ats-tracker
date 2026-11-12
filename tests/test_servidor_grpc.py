@@ -120,3 +120,33 @@ class CliSemGrpcTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@unittest.skipUnless(DISPONIVEL, MOTIVO)
+class AnaliseGrpcTest(unittest.TestCase):
+    def test_analisar_devolve_criterios_e_recusa_formato_sem_suporte(self):
+        import tempfile
+        from pathlib import Path as P
+
+        from gupy_tracker import servidor_grpc
+        from gupy_tracker.v1 import analise_pb2 as apb, analise_pb2_grpc as agrpc
+
+        grpc = servidor_grpc._grpc()
+        with tempfile.TemporaryDirectory() as tmp:
+            servidor, porta = servidor_grpc.criar_servidor(P(tmp) / "vagas.json", "127.0.0.1:0")
+            servidor.start()
+            try:
+                stub = agrpc.AnaliseServiceStub(grpc.insecure_channel(f"127.0.0.1:{porta}"))
+                r = stub.Analisar(apb.AnalisarRequest(
+                    curriculo=b"C#, ASP.NET Core e Entity Framework em producao.",
+                    nome_arquivo="cv.txt",
+                    requisitos="Requisitos\n- C#\n- RabbitMQ",
+                ))
+                self.assertEqual(r.criterios.obrigatorios, 50)
+                self.assertIn("C#", list(r.palavras_chave))
+                self.assertIn("RabbitMQ", list(r.lacunas))
+                with self.assertRaises(grpc.RpcError) as erro:
+                    stub.Analisar(apb.AnalisarRequest(curriculo=b"x", nome_arquivo="cv.xlsx", requisitos="C#"))
+                self.assertEqual(erro.exception.code(), grpc.StatusCode.INVALID_ARGUMENT)
+            finally:
+                servidor.stop(0)

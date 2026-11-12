@@ -12,6 +12,7 @@ import {
 import type { Metricas, Vaga } from "../../dominio/vaga.js";
 import {
   AnonimoQuery,
+  AnalisarBody,
   AtualizarStatusBody,
   ExportarPlanilhaBody,
   FiltroQuery,
@@ -94,6 +95,18 @@ export function criarApp(casos: CasosDeUso, opcoes: { logger?: boolean } = {}): 
   });
 
   app.get("/api/metricas", async (): Promise<Metricas> => casos.metricas());
+
+  app.post("/api/analises", async (req) => {
+    const corpo = validar(AnalisarBody, req.body);
+    return casos.analisarCurriculo({
+      nomeArquivo: corpo.nomeArquivo,
+      curriculo: Buffer.from(corpo.arquivoBase64, "base64"),
+      descricao: corpo.descricao,
+      responsabilidades: corpo.responsabilidades,
+      requisitos: corpo.requisitos,
+      modelo: corpo.modelo,
+    });
+  });
 
   app.post("/api/planilha", async (req) => {
     const { caminho } = validar(ExportarPlanilhaBody, req.body);

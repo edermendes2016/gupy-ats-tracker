@@ -34,6 +34,10 @@ export function useRegistrarVaga() {
   return useMutation({ mutationFn: api.registrarVaga, onSuccess: invalidar });
 }
 
+export function useAnalisarCurriculo() {
+  return useMutation({ mutationFn: api.analisarCurriculo });
+}
+
 export function useAtualizarStatus() {
   const invalidar = useInvalidarTudo();
   return useMutation({

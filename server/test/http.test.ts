@@ -25,10 +25,17 @@ function montar(sobrescrever: Partial<Parameters<typeof criarCasosDeUso>[0]["vag
       metricas: vi.fn(async () => ({ total: 1, enviadas: 0, chegaramEntrevista: 0, taxaConversao: 0 })),
     },
     planilha: { exportar: vi.fn(async () => ({ novas: 0, existentes: 1 })) },
+    analise: { analisar: vi.fn(async () => RESULTADO_ANALISE) },
     hoje: () => "2026-02-03",
   });
   return criarApp(casos);
 }
+
+const RESULTADO_ANALISE = {
+  criterios: { obrigatorios: 67, desejaveis: 50, experiencia: 50, dominio: 50, logistica: 100 },
+  matchScore: 64, classificacao: "boa aderência", palavrasChave: ["C#"], lacunas: ["RabbitMQ"],
+  avisos: [], sugestoes: ["RabbitMQ está na vaga e não aparece no currículo."], anosCurriculo: 7.9, anosPedidos: null,
+};
 
 const NOVA = {
   empresa: "Acme", cargo: "Dev", criterios: { obrigatorios: 80, desejaveis: 50, experiencia: 70, dominio: 60, logistica: 90 },
@@ -83,5 +90,39 @@ describe("rotas HTTP", () => {
     app = montar();
     expect((await app.inject({ method: "GET", url: "/api/ranking" })).json()).toHaveLength(1);
     expect((await app.inject({ method: "GET", url: "/api/metricas" })).json().total).toBe(1);
+  });
+});
+
+describe("POST /api/analises", () => {
+  it("decodifica o arquivo em base64 e devolve o resultado da análise", async () => {
+    const analisar = vi.fn(async () => RESULTADO_ANALISE);
+    const casos = criarCasosDeUso({
+      vagas: { listar: vi.fn(), obter: vi.fn(), registrar: vi.fn(), atualizarStatus: vi.fn() },
+      ranking: { ranking: vi.fn(), metricas: vi.fn() },
+      planilha: { exportar: vi.fn() },
+      analise: { analisar },
+    });
+    app = criarApp(casos);
+    const arquivo = Buffer.from("Eder: C#, RabbitMQ").toString("base64");
+    const r = await app.inject({
+      method: "POST", url: "/api/analises",
+      payload: { nomeArquivo: "cv.txt", arquivoBase64: arquivo, requisitos: "C#\nRabbitMQ", modelo: "remoto" },
+    });
+    expect(r.statusCode).toBe(200);
+    expect(r.json().matchScore).toBe(64);
+    const entrada = analisar.mock.calls[0]![0];
+    expect(entrada.curriculo.toString()).toBe("Eder: C#, RabbitMQ");
+    expect(entrada.modelo).toBe("remoto");
+  });
+
+  it("rejeita pedido sem arquivo ou com modelo inválido", async () => {
+    app = criarApp(criarCasosDeUso({
+      vagas: { listar: vi.fn(), obter: vi.fn(), registrar: vi.fn(), atualizarStatus: vi.fn() },
+      ranking: { ranking: vi.fn(), metricas: vi.fn() },
+      planilha: { exportar: vi.fn() },
+      analise: { analisar: vi.fn() },
+    }));
+    const r = await app.inject({ method: "POST", url: "/api/analises", payload: { nomeArquivo: "cv.txt", modelo: "marciano" } });
+    expect(r.statusCode).toBe(400);
   });
 });

@@ -49,6 +49,26 @@ export const CRITERIOS = [
 export type NomeCriterio = (typeof CRITERIOS)[number]["nome"];
 export type Criterios = Record<NomeCriterio, number>;
 
+/** Resultado da análise automática (vem pronto do serviço Python). */
+export interface ResultadoAnalise {
+  criterios: Criterios;
+  matchScore: number;
+  classificacao: string;
+  palavrasChave: string[];
+  lacunas: string[];
+  avisos: string[];
+  sugestoes: string[];
+  anosCurriculo: number;
+  anosPedidos: number | null;
+}
+
+export interface EntradaAnalise {
+  nomeArquivo: string;
+  arquivoBase64: string;
+  descricao?: string;
+  modelo?: Modelo;
+}
+
 export interface HistoricoItem {
   data: string;
   status: Status;

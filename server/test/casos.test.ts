@@ -35,7 +35,8 @@ function dependencias() {
   const planilha: PlanilhaRepositorio = {
     exportar: vi.fn(async () => ({ novas: 1, existentes: 0 })),
   };
-  return { vagas, ranking, planilha };
+  const analise = { analisar: async () => { throw new Error('não usado'); } };
+  return { vagas, ranking, planilha, analise };
 }
 
 describe("casos de uso", () => {

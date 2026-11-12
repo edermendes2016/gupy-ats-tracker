@@ -1,11 +1,19 @@
 // Casos de uso: orquestram as portas. Não sabem de HTTP nem de gRPC.
 import type { Metricas, NovaVaga, Status, Vaga } from "../dominio/vaga.js";
-import type { PlanilhaRepositorio, RankingRepositorio, VagaRepositorio } from "./portas.js";
+import type {
+  AnaliseRepositorio,
+  EntradaAnalise,
+  PlanilhaRepositorio,
+  RankingRepositorio,
+  ResultadoAnalise,
+  VagaRepositorio,
+} from "./portas.js";
 
 export interface Dependencias {
   vagas: VagaRepositorio;
   ranking: RankingRepositorio;
   planilha: PlanilhaRepositorio;
+  analise: AnaliseRepositorio;
   hoje?: () => string;
 }
 
@@ -35,6 +43,10 @@ export function criarCasosDeUso(dep: Dependencias) {
 
     metricas(): Promise<Metricas> {
       return dep.ranking.metricas();
+    },
+
+    analisarCurriculo(entrada: EntradaAnalise): Promise<ResultadoAnalise> {
+      return dep.analise.analisar(entrada);
     },
 
     exportarPlanilha(caminho: string): Promise<{ novas: number; existentes: number }> {
