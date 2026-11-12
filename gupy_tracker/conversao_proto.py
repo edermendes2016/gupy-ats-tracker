@@ -26,6 +26,11 @@ def _nome(enum, valor: int, prefixo: str) -> str | None:
     return nome[len(prefixo) + 1:].lower()
 
 
+def status_do_proto(valor: int) -> str:
+    """Enum de status (número do proto) -> texto do domínio, como 'entrevista'."""
+    return pb.Status.Name(valor)[len("STATUS_"):].lower()
+
+
 def vaga_para_proto(vaga: dict, *, detalhe: bool) -> pb.Vaga:
     criterios = vaga["criterios"]
     score = calcular_match_score(criterios)

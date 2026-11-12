@@ -32,7 +32,7 @@ Só `cli.py` e `servidor_grpc.py` montam as dependências (caminho do arquivo, t
 
 ## Exceções como contrato
 
-Os casos de uso lançam tipos de erro, e cada interface traduz para o próprio meio: a CLI mostra a mensagem e sai com código 1; o servidor devolve `NOT_FOUND`, `ALREADY_EXISTS` ou `INVALID_ARGUMENT`. Esse é o motivo de a CLI e o gRPC terem exatamente as mesmas mensagens de erro.
+Os casos de uso lançam tipos de erro, e cada interface traduz para o próprio meio: a CLI mostra a mensagem e sai com código 1; o servidor devolve `NOT_FOUND`, `ALREADY_EXISTS` ou `INVALID_ARGUMENT`. As duas interfaces partem das mesmas exceções, mas nem todas as mensagens são idênticas: a CLI acrescenta prefixos como "vaga inválida:", e o gRPC repassa o texto puro no detalhe do status. Padronizar isso (um catálogo de mensagens ou códigos de erro) é um bom próximo passo de estudo.
 
 ## Testes como documentação
 

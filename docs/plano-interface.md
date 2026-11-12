@@ -1,6 +1,6 @@
 # Plano: interface React com TypeScript e comunicação gRPC
 
-> Status: **aprovado nas decisões D1, D2 e D3; aguardando autorização para a Etapa 1**. Nenhum código foi escrito ainda. Este documento descreve a arquitetura, o contrato e as etapas; a implementação começa só depois da aprovação.
+> Status: **implementado**. Etapas 1 a 7 estão no `main` (contrato, casos de uso, servidor gRPC, BFF, interface, docs). As decisões D1, D2 e D3 abaixo continuam válidas. Este documento fica como registro do raciocínio. Nenhum código foi escrito ainda. Este documento descreve a arquitetura, o contrato e as etapas; a implementação começa só depois da aprovação.
 
 ## 1. Resposta curta
 
