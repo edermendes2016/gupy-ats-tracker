@@ -168,6 +168,8 @@ class AnaliseGrpcTest(unittest.TestCase):
                 self.assertEqual(r.criterios.obrigatorios, 50)
                 self.assertIn("C#", list(r.palavras_chave))
                 self.assertIn("RabbitMQ", list(r.lacunas))
+                self.assertTrue(r.apresentacao.startswith("Sou "))
+                self.assertIn("C#", list(r.habilidades_valiosas))
                 with self.assertRaises(grpc.RpcError) as erro:
                     stub.Analisar(apb.AnalisarRequest(curriculo=b"x", nome_arquivo="cv.xlsx", requisitos="C#"))
                 self.assertEqual(erro.exception.code(), grpc.StatusCode.INVALID_ARGUMENT)

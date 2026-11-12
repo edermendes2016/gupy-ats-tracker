@@ -60,6 +60,8 @@ export interface ResultadoAnalise {
   sugestoes: string[];
   anosCurriculo: number;
   anosPedidos: number | null;
+  apresentacao: string;
+  habilidadesValiosas: string[];
 }
 
 export interface EntradaAnalise {

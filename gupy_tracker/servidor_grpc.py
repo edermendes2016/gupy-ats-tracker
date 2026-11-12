@@ -211,6 +211,8 @@ class AnaliseServicer(_Base):
             sugestoes=r.sugestoes,
             anos_curriculo=r.anos_curriculo,
             anos_pedidos=r.anos_pedidos or 0.0,
+            apresentacao=r.apresentacao,
+            habilidades_valiosas=r.habilidades_valiosas,
         )
 
 
