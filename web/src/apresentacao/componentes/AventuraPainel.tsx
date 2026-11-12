@@ -4,6 +4,7 @@
 // No modo anônimo, a lista por vaga não aparece.
 import { useState, type FormEvent } from "react";
 import { useAventura, useRegistrarProgresso } from "../../aplicacao/consultas";
+import { MissoesPainel } from "./MissoesPainel";
 
 const pct = (parte: number, todo: number) => (todo > 0 ? Math.min(100, Math.round((100 * parte) / todo)) : 0);
 
@@ -41,6 +42,8 @@ export function AventuraPainel({ anonimo }: { anonimo: boolean }) {
         da aba Vagas: quanto mais tempo numa etapa que rende, mais XP. Não há ranking.
       </p>
 
+      <MissoesPainel />
+
       <div className="aventura-cartao">
         <div className="aventura-cabeca">
           <span className="aventura-selo" aria-label={`Nível ${a.nivel}`}>{a.nivel}</span>
@@ -61,6 +64,7 @@ export function AventuraPainel({ anonimo }: { anonimo: boolean }) {
         </div>
         <p className="aventura-xp">
           <strong>{a.xp}</strong> XP · próximo nível em {a.xpProximoNivel} XP
+          {a.bonus > 0 && <span className="ajuda"> (inclui {a.bonus} de conquistas e missões)</span>}
         </p>
       </div>
 

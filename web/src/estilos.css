@@ -163,3 +163,37 @@ button:disabled { opacity: 0.6; cursor: default; }
   .aventura-vagas li { grid-template-columns: 1fr; }
   .aventura-vaga-xp { text-align: left; }
 }
+
+/* Missões diárias (aba Aventura) */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.missoes { margin: 0 0 20px; }
+.missoes-lista { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 10px; }
+.missao {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(140px, 200px); gap: 12px; align-items: center;
+  background: #fff; border: 1px solid #e3e6ee; border-radius: 12px; padding: 12px 14px;
+}
+.missao.feita { border-color: #1f7a4d; }
+.missao-titulo { margin: 0; font-weight: 600; }
+.missao-texto p { margin: 2px 0 0; }
+.missao-acao { display: flex; flex-direction: column; gap: 6px; }
+.missao-andamento { font-size: 13px; color: #3d4356; font-variant-numeric: tabular-nums; }
+.missao-marca { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
+@media (max-width: 600px) {
+  .missao { grid-template-columns: 1fr; }
+}
+
+/* Aba Conquistas */
+.conquistas-contagem { margin: 8px 0 12px; }
+.conquistas-grade { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.conquista {
+  background: #fff; border: 1px solid #e3e6ee; border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 6px;
+}
+.conquista h4 { margin: 0; font-size: 16px; }
+.conquista-cabeca { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.conquista-selo { font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid #c9ced9; white-space: nowrap; }
+.conquista.desbloqueada { border-color: #1f7a4d; }
+.conquista.desbloqueada .conquista-selo { background: #1f7a4d; border-color: #1f7a4d; color: #fff; }
+.conquista.bloqueada { opacity: 0.75; }
+.conquista-detalhe { margin: 0; font-weight: 600; color: #3d4356; font-variant-numeric: tabular-nums; }
+.conquista-requisito { margin: 0; font-size: 13px; color: #5b6275; }
+.conquista-motivacao { margin: 4px 0 0; font-style: italic; }

@@ -21,6 +21,11 @@ export const TETO_DIAS_POR_ETAPA = 30;
 export const XP_BASE_ETAPA = 10;
 export const XP_POR_ETAPA_DO_PROCESSO = 2;
 
+/** Bônus por conquista desbloqueada e por missão concluída, com teto para não dominar o XP. */
+export const XP_BONUS_CONQUISTA = 25;
+export const XP_BONUS_MISSAO = 10;
+export const TETO_XP_BONUS = 200;
+
 /** Nível n começa em 25 * (n-1)^2 XP. */
 const XP_BASE_NIVEL = 25;
 
@@ -52,6 +57,8 @@ export interface Aventura {
   nivel: number;
   titulo: string;
   xp: number;
+  /** Parte do XP que vem de conquistas e missões (já limitada pelo teto). */
+  bonus: number;
   xpNivelAtual: number;
   xpProximoNivel: number;
   /** Zero em modo anônimo: a lista por vaga nunca sai da máquina nesse modo. */
@@ -60,7 +67,7 @@ export interface Aventura {
 
 const DIA_MS = 24 * 60 * 60 * 1000;
 
-function diasEntre(inicio: string, fim: string): number {
+export function diasEntre(inicio: string, fim: string): number {
   const a = Date.parse(`${inicio}T00:00:00Z`);
   const b = Date.parse(`${fim}T00:00:00Z`);
   if (Number.isNaN(a) || Number.isNaN(b)) return 0;
@@ -107,6 +114,12 @@ export function xpDaVaga(vaga: Vaga, hoje: string, progresso?: ProgressoEtapas):
   return xpPorTempo(historicoEfetivo(vaga), hoje) + (progresso ? xpPorEtapas(progresso) : 0);
 }
 
+/** Bônus de conquistas e missões, com teto. */
+export function xpBonus(conquistasDesbloqueadas: number, missoesConcluidas: number): number {
+  const bruto = conquistasDesbloqueadas * XP_BONUS_CONQUISTA + missoesConcluidas * XP_BONUS_MISSAO;
+  return Math.min(TETO_XP_BONUS, Math.max(0, bruto));
+}
+
 export function nivelDoXp(xp: number): number {
   return Math.floor(Math.sqrt(Math.max(0, xp) / XP_BASE_NIVEL)) + 1;
 }
@@ -122,6 +135,7 @@ export function montarAventura(
   progressos: Record<string, ProgressoEtapas>,
   hoje: string,
   anonimo = false,
+  bonus = 0,
 ): Aventura {
   const itens: XpVaga[] = vagas.map((v) => ({
     id: v.id,
@@ -129,12 +143,13 @@ export function montarAventura(
     cargo: v.cargo,
     xp: xpDaVaga(v, hoje, progressos[v.id]),
   }));
-  const xp = itens.reduce((soma, i) => soma + i.xp, 0);
+  const xp = itens.reduce((soma, i) => soma + i.xp, 0) + bonus;
   const nivel = nivelDoXp(xp);
   return {
     nivel,
     titulo: tituloDoNivel(nivel),
     xp,
+    bonus,
     xpNivelAtual: XP_BASE_NIVEL * (nivel - 1) ** 2,
     xpProximoNivel: XP_BASE_NIVEL * nivel ** 2,
     vagas: anonimo ? [] : itens.sort((a, b) => b.xp - a.xp || a.empresa.localeCompare(b.empresa)),

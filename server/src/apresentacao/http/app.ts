@@ -18,6 +18,8 @@ import {
   ExportarPlanilhaBody,
   FiltroQuery,
   IdParams,
+  MarcarMissaoBody,
+  MissaoParams,
   NovaVagaBody,
 } from "./esquemas.js";
 
@@ -131,6 +133,19 @@ export function criarApp(
   app.get("/api/aventura", async (req) => {
     const { anonimo } = validar(AnonimoQuery, req.query);
     return casos.aventura(anonimo);
+  });
+
+  app.get("/api/conquistas", async (req) => {
+    const { anonimo } = validar(AnonimoQuery, req.query);
+    return casos.conquistas(anonimo);
+  });
+
+  app.get("/api/missoes", async () => casos.missoes());
+
+  app.post<{ Params: { id: string } }>("/api/missoes/:id", async (req) => {
+    const { id } = validar(MissaoParams, req.params);
+    const { feita } = validar(MarcarMissaoBody, req.body);
+    return casos.marcarMissao(id, feita);
   });
 
   app.post("/api/aventura/progresso", async (req) => {
