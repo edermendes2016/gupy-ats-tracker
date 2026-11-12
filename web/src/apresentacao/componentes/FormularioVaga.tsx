@@ -139,10 +139,13 @@ export function FormularioVaga({ aoCriar }: { aoCriar: () => void }) {
         <legend>Critérios (0 a 100)</legend>
         {CRITERIOS.map((c) => (
           <div className="criterio" key={c.nome}>
-            <span className="criterio-rotulo">
-              <label htmlFor={`criterio-${c.nome}`}>{c.rotulo} <small>({c.peso}%)</small></label>
+            <div className="criterio-cabeca">
+              <label htmlFor={`criterio-${c.nome}`}>
+                <span className="criterio-nome">{c.rotulo}</span>
+                <small className="criterio-peso">({c.peso}%)</small>
+              </label>
               <Dica id={`dica-${c.nome}`} rotulo={c.rotulo} texto={DICAS_CRITERIOS[c.nome]} />
-            </span>
+            </div>
             <input
               id={`criterio-${c.nome}`}
               type="number" min={0} max={100} step={1} required aria-describedby={`dica-${c.nome}`}
