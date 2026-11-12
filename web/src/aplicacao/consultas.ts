@@ -42,14 +42,6 @@ export function useMarcarMissao() {
   });
 }
 
-export function useRegistrarProgresso() {
-  const cliente = useQueryClient();
-  return useMutation({
-    mutationFn: api.registrarProgresso,
-    onSuccess: () => cliente.invalidateQueries({ queryKey: ["aventura"] }),
-  });
-}
-
 export function useMetricas() {
   return useQuery({ queryKey: ["metricas"], queryFn: api.metricas });
 }

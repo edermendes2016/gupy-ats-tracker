@@ -1,15 +1,13 @@
 // Casos de uso: orquestram as portas. Não sabem de HTTP nem de gRPC.
 import type { Metricas, NovaVaga, Status, Vaga } from "../dominio/vaga.js";
-import { montarAventura, xpBonus, type Aventura, type ProgressoEtapas } from "../dominio/aventura.js";
+import { montarAventura, xpBonus, type Aventura } from "../dominio/aventura.js";
 import { calcularConquistas, type Conquista } from "../dominio/conquistas.js";
 import { missoesConcluidas, missoesDoDia, type Missao, type MissaoManual, type RegistroDia } from "../dominio/missoes.js";
-import { ErroConflito, ErroNaoEncontrada } from "./erros.js";
 import type {
   AnaliseRepositorio,
   EntradaAnalise,
   PlanilhaRepositorio,
   MissoesRepositorio,
-  ProgressoRepositorio,
   RankingRepositorio,
   ResultadoAnalise,
   VagaRepositorio,
@@ -20,23 +18,9 @@ export interface Dependencias {
   ranking: RankingRepositorio;
   planilha: PlanilhaRepositorio;
   analise: AnaliseRepositorio;
-  /** Opcional: sem ele, o progresso das etapas fica só em memória. */
-  progresso?: ProgressoRepositorio;
   /** Opcional: sem ele, as marcações das missões ficam só em memória. */
   missoes?: MissoesRepositorio;
   hoje?: () => string;
-}
-
-function memoriaProgresso(): ProgressoRepositorio {
-  const mapa: Record<string, ProgressoEtapas> = {};
-  return {
-    async ler() {
-      return { ...mapa };
-    },
-    async salvar(id, progresso) {
-      mapa[id] = progresso;
-    },
-  };
 }
 
 function memoriaMissoes(): MissoesRepositorio {
@@ -51,11 +35,8 @@ function memoriaMissoes(): MissoesRepositorio {
   };
 }
 
-const normaliza = (texto: string) => texto.trim().toLocaleLowerCase("pt-BR");
-
 export function criarCasosDeUso(dep: Dependencias) {
   const hoje = dep.hoje ?? (() => new Date().toISOString().slice(0, 10));
-  const progresso = dep.progresso ?? memoriaProgresso();
   const repoMissoes = dep.missoes ?? memoriaMissoes();
 
   /** Missões do dia: candidaturas vêm das vagas; estudo e reforço, das marcações e das Métricas. */
@@ -116,7 +97,7 @@ export function criarCasosDeUso(dep: Dependencias) {
       const registros = await repoMissoes.ler();
       const desbloqueadas = calcularConquistas(vagas, hoje(), true).filter((c) => c.desbloqueada).length;
       const bonus = xpBonus(desbloqueadas, missoesConcluidas(vagas, registros));
-      return montarAventura(vagas, await progresso.ler(), hoje(), anonimo, bonus);
+      return montarAventura(vagas, hoje(), anonimo, bonus);
     },
 
     /** Conquistas calculadas a partir das vagas. Em modo anônimo, os textos não citam empresa. */
@@ -133,32 +114,6 @@ export function criarCasosDeUso(dep: Dependencias) {
     async marcarMissao(missao: MissaoManual, feita: boolean): Promise<{ dia: string; missoes: Missao[] }> {
       await repoMissoes.marcar(hoje(), missao, feita);
       return missoesDeHoje();
-    },
-
-    /**
-     * Grava o progresso de uma etapa pela empresa e cargo, para quem não usa id.
-     * Quem chama (extensão ou formulário) informa empresa e cargo; a vaga precisa existir.
-     */
-    async registrarProgresso(entrada: {
-      empresa: string;
-      cargo: string;
-      atual: number;
-      total: number;
-    }): Promise<{ id: string; empresa: string; cargo: string; atual: number; total: number }> {
-      const vagas = await dep.vagas.listar({});
-      const achadas = vagas.filter(
-        (v) => normaliza(v.empresa) === normaliza(entrada.empresa) && normaliza(v.cargo) === normaliza(entrada.cargo),
-      );
-      if (achadas.length === 0) {
-        throw new ErroNaoEncontrada(`vaga não cadastrada: ${entrada.empresa} / ${entrada.cargo}`);
-      }
-      if (achadas.length > 1) {
-        throw new ErroConflito(`há ${achadas.length} vagas com esse nome; registre o progresso pela aba Vagas`);
-      }
-      const vaga = achadas[0]!;
-      const valor = { atual: entrada.atual, total: entrada.total };
-      await progresso.salvar(vaga.id, valor);
-      return { id: vaga.id, empresa: vaga.empresa, cargo: vaga.cargo, ...valor };
     },
   };
 }

@@ -1,34 +1,22 @@
-# Aviso legal: a extensão e a aba Aventura
+# Aviso legal da aba Aventura
 
-A aba **Aventura** é um jogo idle sobre o seu processo seletivo. O XP vem do tempo que cada vaga passa em cada etapa e das etapas concluídas. Este texto explica o que a extensão faz, o que ela não faz e o risco que você assume ao usá-la.
+A aba **Aventura** é um jogo sobre a sua busca de emprego. O XP vem do status e das datas que você mesmo registra na aba **Vagas**: quanto mais tempo uma vaga passa numa etapa que rende, mais XP ela dá.
 
-## O que a extensão faz
+## O que o projeto não faz
 
-- Roda **só** na página **Minhas candidaturas** (`portal.gupy.io/my/applications`), e só lê o texto dos cards quando você clica em **Ler e enviar para o tracker**.
-- Lê apenas empresa, cargo e o contador "Seu Progresso X/Y" de cada card.
-- Envia esses dados **para o tracker rodando no seu computador** (`127.0.0.1`). Nada vai para servidores da Gupy, do projeto ou de terceiros.
-- Não guarda login, senha, cookies ou tokens. Não lê outras abas, e-mails ou dados pessoais além do que está escrito no card.
+- **Não acessa o portal da Gupy.** Nenhuma parte do código abre, lê ou altera o site `portal.gupy.io`.
+- **Não usa extensão do navegador**, nem roda em segundo plano, nem consulta a Gupy sozinho.
+- **Não envia candidaturas**, não responde perguntas de processo seletivo e não usa a API da Gupy.
+- Não guarda login, senha, cookies ou tokens de nenhum site.
 
-## O que a extensão não faz
+## Quem informa e atualiza os dados
 
-- Não roda em segundo plano e não consulta a Gupy sozinha.
-- Não envia candidaturas, não responde perguntas de processo seletivo e não altera nada no portal.
-- Não é uma API oficial. A Gupy oferece uma API pública, voltada a empresas e integrações. Esta extensão não usa essa API.
-
-## Risco dos termos da Gupy
-
-Os [Termos de Uso do Gupy Recrutamento e Seleção para candidatos](https://www.gupy.io/termos-de-uso-recrutamento-e-selecao-candidatos) proíbem, entre outras coisas, copiar ou duplicar partes da plataforma, acessar dados ou contas sem autorização e interferir nos serviços. Eles também dizem que a Gupy disponibiliza apenas a API pública e webhooks para integrações.
-
-Os termos não citam extensões nem leitura automática por nome, mas uma ferramenta que lê o portal pode ser vista como uma dessas práticas. Se isso acontecer, a Gupy pode **suspender ou cancelar a sua conta**. O risco é seu.
-
-## Alternativa sem risco
-
-Você pode registrar a etapa à mão, na aba **Aventura**, em "Registrar etapa à mão". O XP é o mesmo. Nada é lido no portal.
+Você mesmo informa as vagas e ajusta o status de cada uma na aba **Vagas**, quando as coisas mudarem na Gupy ou em outro lugar. O tracker só calcula a partir do que você registrou. Nada é copiado automaticamente do portal.
 
 ## Aviso
 
-Este texto **não é parecer jurídico**. Ele descreve o funcionamento do projeto e os termos públicos da Gupy na data em que foi escrito. Se tiver dúvida sobre o uso permitido, consulte os termos atualizados ou um advogado.
+Este texto **não é parecer jurídico**. Ele descreve como o projeto funciona. Se tiver dúvida sobre o uso permitido de qualquer serviço, consulte os termos atualizados dele ou um advogado.
 
 ## Dados
 
-Os dados do progresso ficam em `private/progresso.json`, fora do Git. Nenhum dado pessoal entra no repositório.
+Os dados ficam na sua máquina, em pastas locais fora do Git. Nenhum dado pessoal entra no repositório.

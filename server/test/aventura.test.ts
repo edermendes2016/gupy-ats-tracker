@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-  montarAventura, nivelDoXp, tituloDoNivel, xpPorEtapas, xpPorTempo, TETO_DIAS_POR_ETAPA,
+  montarAventura, nivelDoXp, tituloDoNivel, xpPorTempo, TETO_DIAS_POR_ETAPA,
 } from "../src/dominio/aventura.js";
 import { criarCasosDeUso } from "../src/aplicacao/casos.js";
 import { criarApp } from "../src/apresentacao/http/app.js";
@@ -49,18 +49,6 @@ describe("XP por tempo", () => {
   });
 });
 
-describe("XP por etapas", () => {
-  it("processos com mais etapas valem mais por etapa", () => {
-    expect(xpPorEtapas({ atual: 1, total: 7 })).toBe(1 * (10 + 2 * 7));
-    expect(xpPorEtapas({ atual: 1, total: 3 })).toBeLessThan(xpPorEtapas({ atual: 1, total: 7 }));
-  });
-
-  it("não passa de total e não aceita negativo", () => {
-    expect(xpPorEtapas({ atual: 9, total: 2 })).toBe(xpPorEtapas({ atual: 2, total: 2 }));
-    expect(xpPorEtapas({ atual: -3, total: 5 })).toBe(0);
-  });
-});
-
 describe("nível e título", () => {
   it("sobe de nível com a raiz do XP", () => {
     expect(nivelDoXp(0)).toBe(1);
@@ -80,25 +68,25 @@ describe("montarAventura", () => {
 
   it("soma o XP das vagas e lista por vaga, em ordem", () => {
     const vagas = [base(), base({ id: "v2", empresa: "Beta", historico: [{ data: "2026-01-10", status: "triagem" }] })];
-    const a = montarAventura(vagas, { v2: { atual: 1, total: 4 } }, hoje);
-    // v2: 1 etapa de 4 (18 XP) + 2 dias em triagem (6 XP) = 24; v1: 11 dias em candidatada = 22.
-    expect(a.vagas.map((v) => v.id)).toEqual(["v2", "v1"]);
-    expect(a.vagas[0]?.xp).toBe(24);
+    const a = montarAventura(vagas, hoje);
+    // v2: 2 dias em triagem (6 XP); v1: 11 dias em candidatada (22 XP).
+    expect(a.vagas.map((v) => v.id)).toEqual(["v1", "v2"]);
+    expect(a.vagas[0]?.xp).toBe(22);
     expect(a.xp).toBe(a.vagas.reduce((s, v) => s + v.xp, 0));
   });
 
   it("vaga sem histórico conta desde a data de cadastro", () => {
-    const a = montarAventura([base({ historico: [], status: "analisada", data: "2026-11-10" })], {}, "2026-11-12");
+    const a = montarAventura([base({ historico: [], status: "analisada", data: "2026-11-10" })], "2026-11-12");
     expect(a.vagas[0]?.xp).toBe(3); // 10, 11 e 12 de novembro, 1 XP por dia
   });
 
   it("lista todas as vagas, mesmo as que ainda não renderam", () => {
-    const a = montarAventura([base({ id: "x", status: "descartada", historico: [] })], {}, "2026-11-12");
+    const a = montarAventura([base({ id: "x", status: "descartada", historico: [] })], "2026-11-12");
     expect(a.vagas.map((v) => v.id)).toEqual(["x"]);
   });
 
   it("em modo anônimo não expõe a lista de vagas", () => {
-    const a = montarAventura([base()], {}, hoje, true);
+    const a = montarAventura([base()], hoje, true);
     expect(a.vagas).toEqual([]);
     expect(a.xp).toBeGreaterThan(0);
   });
@@ -109,7 +97,6 @@ describe("rotas da aventura", () => {
   afterEach(async () => { await app?.close(); app = undefined; });
 
   function montar(vagas: Vaga[]) {
-    const salvos: Record<string, unknown> = {};
     const casos = criarCasosDeUso({
       vagas: {
         listar: vi.fn(async () => vagas),
@@ -118,13 +105,9 @@ describe("rotas da aventura", () => {
       ranking: { ranking: vi.fn(), metricas: vi.fn() } as never,
       planilha: { exportar: vi.fn(), gerarModelo: vi.fn() } as never,
       analise: { analisar: vi.fn() } as never,
-      progresso: {
-        ler: async () => ({}),
-        salvar: async (id, p) => { salvos[id] = p; },
-      },
       hoje: () => hoje,
     });
-    return { app: criarApp(casos), salvos };
+    return { app: criarApp(casos) };
   }
   const hoje = "2026-01-11";
 
@@ -134,36 +117,5 @@ describe("rotas da aventura", () => {
     const r = await app.inject({ method: "GET", url: "/api/aventura" });
     expect(r.statusCode).toBe(200);
     expect(r.json().nivel).toBeGreaterThanOrEqual(1);
-  });
-
-  it("POST /api/aventura/progresso grava pela empresa e cargo", async () => {
-    const m = montar([base()]);
-    app = m.app;
-    const r = await app.inject({
-      method: "POST", url: "/api/aventura/progresso",
-      payload: { empresa: " acme ", cargo: "DEV PLENO", atual: 2, total: 8 },
-    });
-    expect(r.statusCode).toBe(200);
-    expect(m.salvos.v1).toEqual({ atual: 2, total: 8 });
-  });
-
-  it("recusa atual maior que total com 400", async () => {
-    const m = montar([base()]);
-    app = m.app;
-    const r = await app.inject({
-      method: "POST", url: "/api/aventura/progresso",
-      payload: { empresa: "Acme", cargo: "Dev Pleno", atual: 9, total: 8 },
-    });
-    expect(r.statusCode).toBe(400);
-  });
-
-  it("vaga não cadastrada vira 404", async () => {
-    const m = montar([base()]);
-    app = m.app;
-    const r = await app.inject({
-      method: "POST", url: "/api/aventura/progresso",
-      payload: { empresa: "Ninguém", cargo: "Nada", atual: 1, total: 2 },
-    });
-    expect(r.statusCode).toBe(404);
   });
 });
