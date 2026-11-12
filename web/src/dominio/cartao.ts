@@ -1,18 +1,39 @@
 // Cartão para compartilhar (modo anônimo). Só agregados: nenhuma empresa, cargo, data
-// completa, id ou link entra aqui. Os termos são palavras-chave técnicas do próprio perfil.
-import type { Metricas } from "./tipos";
+// completa, id ou link de vaga entra aqui. Os termos são palavras-chave técnicas do próprio perfil.
+import { ROTULO_STATUS, STATUS, type Metricas, type Termo } from "./tipos";
+
+export interface Barra {
+  nome: string;
+  valor: number;
+}
 
 export interface Cartao {
   titulo: string;
   indicadores: Array<{ rotulo: string; valor: string }>;
-  pontosFortes: string[];
-  lacunas: string[];
+  funil: Barra[];
+  pontosFortes: Barra[];
+  lacunas: Barra[];
+  chamada: string;
+  repositorio: string;
   rodape: string;
 }
 
 export const LIMITE_TERMOS_CARTAO = 5;
+export const LIMITE_FUNIL_CARTAO = 5;
+
+export const REPOSITORIO_URL = "https://github.com/edermendes2016/gupy-ats-tracker";
+export const REPOSITORIO_EXIBICAO = "github.com/edermendes2016/gupy-ats-tracker";
+export const CHAMADA_CARTAO = "Comece agora";
+
+const paraBarras = (termos: Termo[], limite: number): Barra[] =>
+  termos.slice(0, limite).map((t) => ({ nome: t.nome, valor: t.vagas }));
 
 export function montarCartao(m: Metricas, limite = LIMITE_TERMOS_CARTAO): Cartao {
+  const contagem = new Map(m.porStatus.map((s) => [s.status, s.vagas]));
+  // Cabem até cinco etapas no cartão: ficam as mais povoadas, mantendo a ordem do fluxo.
+  const funilCompleto = STATUS.map((s) => ({ nome: ROTULO_STATUS[s], valor: contagem.get(s) ?? 0 })).filter((b) => b.valor > 0);
+  const maisPovoadas = new Set([...funilCompleto].sort((a, b) => b.valor - a.valor).slice(0, LIMITE_FUNIL_CARTAO));
+  const funil = funilCompleto.filter((b) => maisPovoadas.has(b));
   return {
     titulo: "Minha busca de emprego em números",
     indicadores: [
@@ -22,19 +43,22 @@ export function montarCartao(m: Metricas, limite = LIMITE_TERMOS_CARTAO): Cartao
       { rotulo: "conversão em entrevista", valor: `${Math.round(m.taxaConversao * 100)}%` },
       { rotulo: "score médio de aderência", valor: `${m.scoreMedio}%` },
     ],
-    pontosFortes: m.pontosFortes.slice(0, limite).map((t) => t.nome),
-    lacunas: m.lacunas.slice(0, limite).map((t) => t.nome),
+    funil,
+    pontosFortes: paraBarras(m.pontosFortes, limite),
+    lacunas: paraBarras(m.lacunas, limite),
+    chamada: CHAMADA_CARTAO,
+    repositorio: REPOSITORIO_EXIBICAO,
     rodape: "Dados agregados e anônimos",
   };
 }
 
-/** Versão em texto, para colar nas redes. */
+/** Versão em texto, para colar nas redes. Inclui o convite para começar pelo repositório. */
 export function textoCartao(c: Cartao): string {
   const linhas = [c.titulo, ""];
   for (const i of c.indicadores) linhas.push(`• ${i.valor} ${i.rotulo}`);
-  if (c.pontosFortes.length) linhas.push("", `Pontos fortes: ${c.pontosFortes.join(", ")}`);
-  if (c.lacunas.length) linhas.push(`Para estudar: ${c.lacunas.join(", ")}`);
-  linhas.push("", c.rodape);
+  if (c.pontosFortes.length) linhas.push("", `Pontos fortes: ${c.pontosFortes.map((b) => b.nome).join(", ")}`);
+  if (c.lacunas.length) linhas.push(`Para estudar: ${c.lacunas.map((b) => b.nome).join(", ")}`);
+  linhas.push("", `${c.chamada}: ${REPOSITORIO_URL}`, c.rodape);
   return linhas.join("\n");
 }
 

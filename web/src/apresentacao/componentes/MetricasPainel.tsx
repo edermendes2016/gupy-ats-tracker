@@ -1,9 +1,17 @@
 // Painel de acompanhamento: indicadores, funil, faixas de score, evolução mensal e termos.
 // Só usa dados agregados. O botão de compartilhar aparece só no modo anônimo.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMetricas } from "../../aplicacao/consultas";
 import { ROTULO_STATUS, STATUS, type Metricas, type Termo } from "../../dominio/tipos";
-import { ASSUNTO_CARTAO, linksCompartilhamento, montarCartao, textoCartao, urlPublica } from "../../dominio/cartao";
+import {
+  ASSUNTO_CARTAO,
+  CHAMADA_CARTAO,
+  REPOSITORIO_URL,
+  linksCompartilhamento,
+  montarCartao,
+  textoCartao,
+  urlPublica,
+} from "../../dominio/cartao";
 import { gerarPng } from "../cartao/png";
 
 const pct = (parte: number, todo: number) => (todo ? Math.round((100 * parte) / todo) : 0);
@@ -101,22 +109,34 @@ function CompartilharCartao({ m, anonimo }: { m: Metricas; anonimo: boolean }) {
   const [aviso, setAviso] = useState<string | null>(null);
   const cartao = montarCartao(m);
   const texto = textoCartao(cartao);
+  const chave = JSON.stringify(cartao);
   const podeNativo = typeof navigator !== "undefined" && typeof navigator.share === "function";
+
+  // A prévia é redesenhada sempre que os números mudam. Libera a URL anterior ao trocar.
+  useEffect(() => {
+    if (!anonimo) return;
+    // Descarta a prévia antiga: ela não pode ser baixada nem compartilhada depois da troca de números.
+    setPng(null);
+    let cancelado = false;
+    let url: string | null = null;
+    gerarPng(cartao)
+      .then((blob) => {
+        if (cancelado) return;
+        url = URL.createObjectURL(blob);
+        setPng({ url, blob });
+      })
+      .catch(() => {
+        if (!cancelado) setAviso("Prévia indisponível neste navegador. Use o texto abaixo.");
+      });
+    return () => {
+      cancelado = true;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [chave, anonimo]);
 
   async function obterPng(): Promise<Blob> {
     if (png) return png.blob;
-    const blob = await gerarPng(cartao);
-    setPng({ url: URL.createObjectURL(blob), blob });
-    return blob;
-  }
-
-  async function gerar() {
-    setAviso(null);
-    try {
-      await obterPng();
-    } catch (erro) {
-      setAviso((erro as Error).message);
-    }
+    return gerarPng(cartao);
   }
 
   async function copiar(mensagem = "Texto copiado.") {
@@ -152,7 +172,6 @@ function CompartilharCartao({ m, anonimo }: { m: Metricas; anonimo: boolean }) {
         <h3>Compartilhar</h3>
         <div className="barra">
           <button disabled>Compartilhar</button>
-          <button disabled>Gerar imagem</button>
           <button disabled>Copiar texto</button>
         </div>
         <p className="ajuda">Ative o Modo anônimo (no topo da página) para compartilhar.</p>
@@ -166,12 +185,15 @@ function CompartilharCartao({ m, anonimo }: { m: Metricas; anonimo: boolean }) {
   return (
     <section className="compartilhar" aria-label="Compartilhar">
       <h3>Compartilhar</h3>
-      <p className="ajuda">Só aparecem totais e termos do perfil. Nada de empresas, vagas ou links.</p>
+      <p className="ajuda">Só aparecem totais e termos do perfil. Nada de empresas, vagas ou links de vagas.</p>
+      {png && <img src={png.url} alt="Prévia do cartão com as métricas anônimas" className="previa-cartao" width={1200} height={627} />}
       <div className="barra">
+        <a className="botao botao-principal" href={REPOSITORIO_URL} target="_blank" rel="noopener noreferrer">
+          {CHAMADA_CARTAO}
+        </a>
         {podeNativo && <button onClick={compartilharNativo}>Compartilhar</button>}
-        <button onClick={gerar}>Gerar imagem</button>
         <button onClick={() => copiar()}>Copiar texto</button>
-        {png && <a className="botao" href={png.url} download="gupy-tracker-metricas.png">Baixar PNG</a>}
+        {png && <a className="botao" href={png.url} download="gupy-tracker-metricas.png">Baixar imagem</a>}
       </div>
       <ul className="redes" aria-label="Compartilhar em redes sociais">
         {links.map((l) => (
@@ -188,9 +210,8 @@ function CompartilharCartao({ m, anonimo }: { m: Metricas; anonimo: boolean }) {
           </li>
         ))}
       </ul>
-      <p className="ajuda">No LinkedIn o texto não vai pré-preenchido: ao clicar, ele é copiado. Cole na publicação e, se quiser, anexe a imagem (Gerar imagem → Baixar PNG).</p>
+      <p className="ajuda">No LinkedIn o texto não vai pré-preenchido: ao clicar, ele é copiado. Cole na publicação e, se quiser, anexe a imagem (Baixar imagem).</p>
       {aviso && <p role="status" className="ajuda">{aviso}</p>}
-      {png && <img src={png.url} alt="Cartão com as métricas anônimas" className="previa-cartao" />}
       <pre className="texto-cartao">{texto}</pre>
     </section>
   );

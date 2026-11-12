@@ -78,7 +78,7 @@ describe("App", () => {
     await userEvent.click(screen.getByRole("tab", { name: "Métricas" }));
     await screen.findByText("vagas analisadas");
     expect(screen.getByRole("heading", { name: "Compartilhar" })).toBeTruthy();
-    expect((screen.getByRole("button", { name: "Gerar imagem" }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole("button", { name: "Copiar texto" }) as HTMLButtonElement).disabled).toBe(true);
     expect(screen.getByText(/ative o modo anônimo/i)).toBeTruthy();
   });
 
@@ -91,7 +91,8 @@ describe("App", () => {
     await userEvent.click(screen.getByRole("tab", { name: "Métricas" }));
     await screen.findByText("vagas analisadas");
     await userEvent.click(screen.getByLabelText(/modo anônimo/i));
-    expect((screen.getByRole("button", { name: "Gerar imagem" }) as HTMLButtonElement).disabled).toBe(false);
+    expect((screen.getByRole("button", { name: "Copiar texto" }) as HTMLButtonElement).disabled).toBe(false);
+    expect(screen.getByRole("link", { name: "Comece agora" }).getAttribute("href")).toBe("https://github.com/edermendes2016/gupy-ats-tracker");
   });
 });
 
