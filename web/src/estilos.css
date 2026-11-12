@@ -1,0 +1,70 @@
+:root {
+  --fundo: #f6f7f9;
+  --superficie: #ffffff;
+  --texto: #1d2330;
+  --suave: #5b6476;
+  --borda: #dde1ea;
+  --destaque: #2b59c3;
+  --alta: #1f7a4d;
+  --boa: #2b59c3;
+  --aposta: #a86b00;
+  --descartar: #9a2b2b;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fundo: #14171f;
+    --superficie: #1d2230;
+    --texto: #e7eaf2;
+    --suave: #9aa3b5;
+    --borda: #303849;
+    --destaque: #7b9cff;
+  }
+}
+body { margin: 0; background: var(--fundo); color: var(--texto); font: 15px/1.5 system-ui, sans-serif; }
+.app { max-width: 1100px; margin: 0 auto; padding: 16px; }
+.topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1 { font-size: 1.4rem; margin: 8px 0; }
+.abas { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0; }
+.abas button { background: transparent; border: 1px solid var(--borda); color: var(--texto); padding: 6px 12px; border-radius: 999px; cursor: pointer; }
+.abas button.ativa { background: var(--destaque); border-color: var(--destaque); color: #fff; }
+.conteudo { background: var(--superficie); border: 1px solid var(--borda); border-radius: 12px; padding: 16px; }
+.ajuda, .sub, small, .aviso { color: var(--suave); }
+.tabela-wrap { overflow-x: auto; }
+.tabela { width: 100%; border-collapse: collapse; }
+.tabela th, .tabela td { text-align: left; padding: 8px; border-bottom: 1px solid var(--borda); vertical-align: middle; }
+.link { background: none; border: 0; color: var(--destaque); cursor: pointer; padding: 0; font: inherit; text-align: left; }
+.selo { display: inline-block; min-width: 3.2em; text-align: center; padding: 2px 8px; border-radius: 999px; color: #fff; font-weight: 600; }
+.selo-alta { background: var(--alta); }
+.selo-boa { background: var(--boa); }
+.selo-aposta { background: var(--aposta); }
+.selo-descartar { background: var(--descartar); }
+.barra { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+.erro { color: var(--descartar); }
+.vazio { color: var(--suave); }
+.cartoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.cartao { border: 1px solid var(--borda); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; }
+.cartao .num { font-size: 1.8rem; font-weight: 700; }
+.detalhe { position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 100%); background: var(--superficie); border-left: 1px solid var(--borda); padding: 16px; overflow-y: auto; box-shadow: -8px 0 24px rgb(0 0 0 / 0.12); }
+.fechar { float: right; background: none; border: 0; font-size: 1.5rem; cursor: pointer; color: var(--texto); }
+.ficha { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; }
+.ficha dt { color: var(--suave); }
+.ficha dd { margin: 0; }
+.criterios { list-style: none; padding: 0; display: grid; gap: 8px; }
+.criterios li { display: grid; grid-template-columns: 1fr 120px 36px; gap: 8px; align-items: center; }
+.num { font-variant-numeric: tabular-nums; }
+.texto { white-space: pre-wrap; }
+.formulario .campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.formulario label { display: flex; flex-direction: column; gap: 4px; font-size: 0.92rem; }
+.formulario .largo { grid-column: 1 / -1; }
+.formulario fieldset { border: 1px solid var(--borda); border-radius: 10px; margin: 12px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+input, select, textarea, button { font: inherit; color: var(--texto); background: var(--fundo); border: 1px solid var(--borda); border-radius: 8px; padding: 6px 8px; }
+button[type="submit"] { background: var(--destaque); color: #fff; border: 0; padding: 8px 16px; cursor: pointer; }
+button:disabled { opacity: 0.6; cursor: default; }
+.exportar { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-top: 16px; }
+.exportar label { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 240px; }
+.alternar { display: flex; gap: 6px; align-items: center; }
+@media (max-width: 600px) {
+  .app { padding: 12px; }
+  .conteudo { padding: 12px; }
+}

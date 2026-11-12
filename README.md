@@ -27,9 +27,44 @@ cd gupy-ats-tracker
 python -m gupy_tracker ranking
 ```
 
+## Interface web (opcional)
+
+Precisa de Python 3.10+ e Node 20+. Os comandos funcionam no Windows (cmd, PowerShell ou Git Bash), no macOS e no Linux. Abra três terminais dentro da pasta do projeto.
+
+**Terminal 1: serviço Python (gRPC)**
+
+```
+python -m pip install ".[grpc]" grpcio-tools
+python scripts/gerar_proto.py
+python -m gupy_tracker.servidor_grpc
+```
+
+O último comando usa `private/vagas.json`. Você não precisa criar a pasta nem o arquivo: eles são criados quando a primeira vaga for salva. Se quiser outro arquivo, use `python -m gupy_tracker.servidor_grpc --dados caminho/do/vagas.json`.
+
+**Terminal 2: BFF (HTTP para a interface)**
+
+```
+cd server
+npm install
+npm start
+```
+
+**Terminal 3: interface**
+
+```
+cd web
+npm install
+npm run dev
+```
+
+Depois, abra http://127.0.0.1:5173 no navegador.
+
+Arquitetura e decisões: [plano da interface](docs/plano-interface.md). Detalhes do servidor: [servidor gRPC](docs/servidor-grpc.md).
+
 ## Documentação
 
 - [Como usar](docs/como-usar.md): passo a passo, do download ao primeiro ranking
 - [Comandos](docs/comandos.md): referência de comandos, opções e status
 - [Metodologia do Match Score](docs/match-score.md): os cinco critérios, pesos e faixas
 - [Proteção de dados](docs/protecao-de-dados.md): como nada sensível vai para o Git
+- [Wiki da parte Python](docs/wiki-python/README.md): estudo do código e padrões de projeto
