@@ -60,7 +60,8 @@ export function traduzirErro(err: grpc.ServiceError): Error {
       // Quase sempre o processo Python é mais antigo que o código: o método não existe nele.
       return new ErroIndisponivel(
         "o serviço Python não tem este método (versão antiga). Pare o servidor gRPC, rode " +
-          "'py scripts\\gerar_proto.py' e suba de novo com 'py -m gupy_tracker.servidor_grpc'. " +
+          "'python scripts/gerar_proto.py' (no Windows, 'py scripts\\gerar_proto.py') e suba de novo " +
+          "com 'python -m gupy_tracker.servidor_grpc' (no Windows, 'py -m ...'). " +
           "Detalhe: " + detalhe,
       );
     case grpc.status.UNAVAILABLE:
