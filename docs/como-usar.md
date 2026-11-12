@@ -39,6 +39,18 @@ Na primeira vez, isso cria o arquivo `private/vagas.json`. É nele que ficam as 
 
 Todas as opções do `adicionar` estão em [Comandos](comandos.md).
 
+#### Candidatura com os campos da Gupy
+
+Ao se candidatar pela Gupy, o currículo padrão é o do próprio perfil Gupy. Copie os três campos da vaga (**Descrição da vaga**, **Responsabilidades e atribuições** e **Requisitos e qualificações**) para o registro. Se for enviar outro currículo, use `--curriculo outro --nome-curriculo NOME`:
+
+```bash
+python -m gupy_tracker adicionar --empresa "Nome" --cargo "Cargo" --url "https://..." \
+  --obrigatorios 85 --desejaveis 60 --experiencia 90 --dominio 70 --logistica 100 \
+  --descricao @descricao.txt --responsabilidades @responsabilidades.txt --requisitos @requisitos.txt
+```
+
+Os textos podem ser digitados entre aspas ou lidos de um arquivo `.txt` com `@`. Os arquivos não são enviados a lugar nenhum e ficam no seu computador.
+
 ### 4. Atualize o status quando o processo andar
 
 ```bash
@@ -51,6 +63,7 @@ Basta um trecho do id da vaga (aqui, `nome-da-empresa`). Os status possíveis s�
 
 ```bash
 python -m gupy_tracker ranking                        # ranking no terminal
+python -m gupy_tracker ranking --planilha "Planilha de controle.xlsx"  # ranking e preenche a planilha de controle
 python -m gupy_tracker metricas                       # funil e taxa de conversão
 python -m gupy_tracker relatorio --saida RANKING.md   # relatório anônimo em Markdown
 ```
