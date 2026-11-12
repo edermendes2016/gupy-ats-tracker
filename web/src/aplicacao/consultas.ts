@@ -23,6 +23,25 @@ export function useAventura(anonimo: boolean, habilitado = true) {
   return useQuery({ queryKey: ["aventura", anonimo], queryFn: () => api.aventura(anonimo), enabled: habilitado });
 }
 
+export function useConquistas(anonimo: boolean, habilitado = true) {
+  return useQuery({ queryKey: ["conquistas", anonimo], queryFn: () => api.conquistas(anonimo), enabled: habilitado });
+}
+
+export function useMissoes() {
+  return useQuery({ queryKey: ["missoes"], queryFn: api.missoes });
+}
+
+export function useMarcarMissao() {
+  const cliente = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, feita }: { id: "estudo" | "reforco"; feita: boolean }) => api.marcarMissao(id, feita),
+    onSuccess: (dados) => {
+      cliente.setQueryData(["missoes"], dados);
+      return cliente.invalidateQueries({ queryKey: ["aventura"] });
+    },
+  });
+}
+
 export function useRegistrarProgresso() {
   const cliente = useQueryClient();
   return useMutation({

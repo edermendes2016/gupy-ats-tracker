@@ -1,6 +1,7 @@
 // Portas: o que a aplicação precisa do mundo externo. Quem implementa é a infraestrutura.
 import type { Metricas, NovaVaga, Status, Vaga } from "../dominio/vaga.js";
 import type { ProgressoEtapas } from "../dominio/aventura.js";
+import type { MissaoManual, RegistroDia } from "../dominio/missoes.js";
 
 export interface FiltroVagas {
   status?: Status;
@@ -56,4 +57,10 @@ export interface PlanilhaRepositorio {
 export interface ProgressoRepositorio {
   ler(): Promise<Record<string, ProgressoEtapas>>;
   salvar(id: string, progresso: ProgressoEtapas): Promise<void>;
+}
+
+/** Marcações diárias das missões de estudo e reforço (dia AAAA-MM-DD -> registro). */
+export interface MissoesRepositorio {
+  ler(): Promise<Record<string, RegistroDia>>;
+  marcar(dia: string, missao: MissaoManual, feita: boolean): Promise<void>;
 }

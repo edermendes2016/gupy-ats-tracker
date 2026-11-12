@@ -151,7 +151,38 @@ export interface Aventura {
   nivel: number;
   titulo: string;
   xp: number;
+  /** XP vindo de conquistas e missões (com teto). */
+  bonus: number;
   xpNivelAtual: number;
   xpProximoNivel: number;
   vagas: Array<{ id: string; empresa: string; cargo: string; xp: number }>;
+}
+
+/** Conquista cômica, calculada no BFF. A frase de motivação aparece sempre. */
+export interface Conquista {
+  id: string;
+  titulo: string;
+  requisito: string;
+  motivacao: string;
+  desbloqueada: boolean;
+  detalhe: string | null;
+}
+
+export type TipoMissao = "candidaturas" | "estudo" | "reforco";
+
+export interface Missao {
+  id: TipoMissao;
+  titulo: string;
+  descricao: string;
+  progresso: number;
+  meta: number;
+  concluida: boolean;
+  sugestao: string | null;
+  manual: boolean;
+}
+
+/** Missões de um dia (AAAA-MM-DD). */
+export interface Missoes {
+  dia: string;
+  missoes: Missao[];
 }

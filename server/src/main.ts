@@ -7,6 +7,7 @@ import { criarApp } from "./apresentacao/http/app.js";
 import { escolherXlsxWindows } from "./infraestrutura/seletor.js";
 import { registrarEstaticos } from "./apresentacao/http/estaticos.js";
 import { criarProgressoArquivo } from "./infraestrutura/progresso/arquivo.js";
+import { criarMissoesArquivo } from "./infraestrutura/progresso/missoes-arquivo.js";
 
 const HOST = process.env.HOST ?? "127.0.0.1";
 const PORT = Number(process.env.PORT ?? 3000);
@@ -19,6 +20,7 @@ const casos = criarCasosDeUso({
   planilha: repos.planilha,
   analise: repos.analise,
   progresso: criarProgressoArquivo(process.env.GUPY_TRACKER_PROGRESSO ?? "private/progresso.json"),
+  missoes: criarMissoesArquivo(process.env.GUPY_TRACKER_MISSOES ?? "private/missoes.json"),
 });
 const app = criarApp(casos, {
   logger: true,

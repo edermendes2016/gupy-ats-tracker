@@ -58,3 +58,6 @@ export const AnalisarBody = z.object({
 });
 
 export const IdParams = z.object({ id: z.string().min(1) });
+
+export const MissaoParams = z.object({ id: z.enum(["estudo", "reforco"]) });
+export const MarcarMissaoBody = z.object({ feita: z.boolean() });
