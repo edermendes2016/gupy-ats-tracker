@@ -11,16 +11,18 @@ Colunas (A a H), na ordem do modelo:
 from __future__ import annotations
 
 import re
+import unicodedata
 import zipfile
 from datetime import date
 from pathlib import Path
-from xml.sax.saxutils import escape
+from xml.sax.saxutils import escape, unescape
 
 COLUNAS = "ABCDEFGH"
 PRIMEIRA_LINHA_DADOS = 3  # a linha 1 é o título e a 2 é o cabeçalho
 ABA = "xl/worksheets/sheet1.xml"
 TABELA = "xl/tables/table1.xml"
 EPOCA_EXCEL = date(1899, 12, 30)
+ESTILO_DATA = "10"  # formato de data do modelo (numFmt 14); sem ele a data vira número
 
 
 def _serial(data_iso: str) -> int:
@@ -44,6 +46,8 @@ def valores_da_vaga(vaga: dict) -> list:
 
 def _celula(coluna: str, linha: int, valor, estilo: str | None) -> str:
     ref = f"{coluna}{linha}"
+    if coluna == "A" and isinstance(valor, int):
+        estilo = ESTILO_DATA  # a coluna A é sempre data, mesmo em linha nova ou sem estilo
     s = f' s="{estilo}"' if estilo else ""
     if valor == "" or valor is None:
         return f'<c r="{ref}"{s}/>'
@@ -53,7 +57,22 @@ def _celula(coluna: str, linha: int, valor, estilo: str | None) -> str:
     return f'<c r="{ref}"{s} t="inlineStr"><is><t xml:space="preserve">{texto}</t></is></c>'
 
 
-def _linhas(xml: str) -> dict[int, tuple[str, dict[str, str], dict[str, str]]]:
+def _strings_compartilhadas(conteudo: dict[str, bytes]) -> list[str]:
+    """Textos de xl/sharedStrings.xml. O Excel grava quase todo texto ali (t="s"), não na célula."""
+    if "xl/sharedStrings.xml" not in conteudo:
+        return []
+    xml = conteudo["xl/sharedStrings.xml"].decode("utf-8")
+    return [unescape("".join(re.findall(r"<t[^>]*>(.*?)</t>", si, re.S)))
+            for si in re.findall(r"<si>(.*?)</si>", xml, re.S)]
+
+
+def _chave(texto: str | None) -> str:
+    """Empresa ou cargo para comparar: sem acento, sem diferença de caixa e de espaços."""
+    sem_acento = "".join(c for c in unicodedata.normalize("NFKD", texto or "") if not unicodedata.combining(c))
+    return " ".join(sem_acento.casefold().split())
+
+
+def _linhas(xml: str, sst: list[str] = ()) -> dict[int, tuple[str, dict[str, str], dict[str, str]]]:
     """Mapa linha -> (abertura da <row>, estilo por coluna, texto por coluna)."""
     linhas = {}
     for m in re.finditer(r'<row r="(\d+)"([^>]*?)(?:/>|>(.*?)</row>)', xml, re.S):
@@ -64,7 +83,12 @@ def _linhas(xml: str) -> dict[int, tuple[str, dict[str, str], dict[str, str]]]:
             if sm:
                 estilos[c.group(1)] = sm.group(1)
             if c.group(3):
-                textos[c.group(1)] = re.sub(r"<[^>]+>", "", c.group(3))
+                if 't="s"' in c.group(2):
+                    indice = re.search(r"<v>(\d+)</v>", c.group(3))
+                    if indice and int(indice.group(1)) < len(sst):
+                        textos[c.group(1)] = sst[int(indice.group(1))]
+                else:
+                    textos[c.group(1)] = unescape(re.sub(r"<[^>]+>", "", c.group(3)))
         linhas[n] = (m.group(2), estilos, textos)
     return linhas
 
@@ -74,8 +98,8 @@ def _textos_de(linha) -> dict[str, str]:
 
 
 def _ja_existe(textos: dict[str, str], vaga: dict) -> bool:
-    return (textos.get("B", "").strip().casefold() == vaga["empresa"].strip().casefold()
-            and textos.get("C", "").strip().casefold() == vaga["cargo"].strip().casefold())
+    return (_chave(textos.get("B")) == _chave(vaga["empresa"])
+            and _chave(textos.get("C")) == _chave(vaga["cargo"]))
 
 
 def _linha_de(vaga: dict, n: int, linhas: dict, xml_estilos: dict) -> str:
@@ -98,7 +122,7 @@ def _atualizar_linha(xml: str, n: int, vaga: dict, textos: dict, estilos: dict) 
         if valor in ("", None):
             continue
         atual = textos.get(col, "")
-        if str(atual).strip() != str(valor).strip():
+        if _chave(str(atual)) != _chave(str(valor)):
             colunas_novas[col] = valor
     if not colunas_novas:
         return xml, False
@@ -122,7 +146,8 @@ def exportar(caminho: Path, vagas: list[dict]) -> tuple[int, int]:
         conteudo = {nome: z.read(nome) for nome in z.namelist()}
         infos = {i.filename: i for i in z.infolist()}
     xml = conteudo[ABA].decode("utf-8")
-    linhas = _linhas(xml)
+    sst = _strings_compartilhadas(conteudo)
+    linhas = _linhas(xml, sst)
 
     ultima = max(linhas)
     existentes = {n: t for n, (_, _, t) in linhas.items() if n >= PRIMEIRA_LINHA_DADOS}
@@ -137,7 +162,7 @@ def exportar(caminho: Path, vagas: list[dict]) -> tuple[int, int]:
             ja_existiam += 1
             xml, mudou = _atualizar_linha(xml, achada, vaga, existentes[achada], linhas[achada][1])
             if mudou:
-                linhas = _linhas(xml)
+                linhas = _linhas(xml, sst)
                 existentes[achada] = {**existentes[achada], **{k: v for k, v in _textos_de(linhas[achada]).items()}}
                 atualizadas_xml = True
             continue
@@ -190,7 +215,7 @@ CABECALHO = [
     "Fonte (LinkedIn/Gupy/ outros)", "Link da vaga",
 ]
 LARGURAS = [22.140625, 18, 30.42578125, 18.85546875, 50.5703125, 36.7109375, 30.7109375, 118.28515625]
-_ESTILO_LINHA = {"A": 11, "B": 1, "C": 1, "D": 1, "E": 1, "F": 1, "G": 1, "H": 2}
+_ESTILO_LINHA = {"A": 10, "B": 1, "C": 1, "D": 1, "E": 1, "F": 1, "G": 1, "H": 2}
 ESTILOS = {
     1: {"A": 17, "B": 16},
     2: {"A": 9, "B": 3, "C": 3, "D": 3, "E": 3, "F": 3, "G": 3, "H": 4},
