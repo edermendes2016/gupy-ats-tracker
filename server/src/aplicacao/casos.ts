@@ -2,6 +2,7 @@
 import type { Metricas, NovaVaga, Status, Vaga } from "../dominio/vaga.js";
 import { montarAventura, xpBonus, type Aventura } from "../dominio/aventura.js";
 import { calcularConquistas, type Conquista } from "../dominio/conquistas.js";
+import { diaDeHoje } from "../dominio/dia.js";
 import { missoesConcluidas, missoesDoDia, type Missao, type MissaoManual, type RegistroDia } from "../dominio/missoes.js";
 import type {
   AnaliseRepositorio,
@@ -37,7 +38,7 @@ function memoriaMissoes(): MissoesRepositorio {
 }
 
 export function criarCasosDeUso(dep: Dependencias) {
-  const hoje = dep.hoje ?? (() => new Date().toISOString().slice(0, 10));
+  const hoje = dep.hoje ?? (() => diaDeHoje());
   const repoMissoes = dep.missoes ?? memoriaMissoes();
 
   /** Missões do dia: candidaturas vêm das vagas; estudo e reforço, das marcações e das Métricas. */
