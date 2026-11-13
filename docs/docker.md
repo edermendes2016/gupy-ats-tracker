@@ -62,10 +62,12 @@ Depois, recarregue a página. As empresas são fictícias.
 
 Se você acompanha as candidaturas em uma planilha Excel, o sistema pode preenchê-la.
 
-1. Crie uma pasta chamada `planilhas` dentro da pasta do projeto e coloque nela o arquivo `.xlsx`. Se ainda não tiver planilha, pule para o item 3 e o sistema cria uma.
-2. Na página, na seção de planilha, digite o caminho **dentro do contêiner**: `/app/planilhas/nome-do-arquivo.xlsx`. O botão **Abrir planilha** não funciona com Docker, então digite o caminho.
-3. Para criar uma planilha nova, clique em **Gerar planilha** e informe `/app/planilhas/controle.xlsx`.
+1. Crie uma pasta chamada `planilhas` dentro da pasta do projeto (ou aponte `GUPY_PLANILHAS` para a pasta onde sua planilha já está) e coloque nela o arquivo `.xlsx`.
+2. Na página, clique em **Abrir planilha**. Como o navegador não enxerga o caminho real do arquivo no Docker, o sistema lista os `.xlsx` da pasta `planilhas` e você escolhe um deles. O arquivo original é usado, sem cópia.
+3. Para criar uma planilha nova, clique em **Gerar planilha**, informe a **pasta** no formato do contêiner (`/app/planilhas`) e digite só o **nome** do arquivo, por exemplo `controle`. O `.xlsx` é acrescentado sozinho. Se já existir um arquivo com esse nome, o sistema não substitui: escolha outro nome.
 4. Clique em **Exportar planilha**. O sistema adiciona uma linha para cada vaga que ainda não está na planilha. Vagas já existentes não são duplicadas.
+
+No Windows, rodando sem Docker, os botões **Escolher pasta** e **Abrir planilha** abrem a janela do próprio Windows.
 
 Observação: o sistema preenche a planilha a partir das vagas cadastradas. Ele não importa linhas de uma planilha existente.
 

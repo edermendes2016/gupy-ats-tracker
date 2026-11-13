@@ -69,8 +69,23 @@ export function useEscolherPlanilha() {
   return useMutation({ mutationFn: api.escolherPlanilha });
 }
 
+export function usePlanilhasDisponiveis(ativo: boolean) {
+  return useQuery({
+    queryKey: ["planilhas-disponiveis"],
+    queryFn: api.planilhasDisponiveis,
+    enabled: ativo,
+    retry: false,
+  });
+}
+
+export function useEscolherPasta() {
+  return useMutation({ mutationFn: api.escolherPasta });
+}
+
 export function useGerarPlanilha() {
-  return useMutation({ mutationFn: api.gerarPlanilha });
+  return useMutation({
+    mutationFn: ({ pasta, nome }: { pasta: string; nome: string }) => api.gerarPlanilha(pasta, nome),
+  });
 }
 
 export function useAnalisarCurriculo() {

@@ -48,6 +48,11 @@ export const ExportarPlanilhaBody = z.object({
   caminho: z.string().min(1),
 });
 
+export const GerarPlanilhaBody = z.object({
+  pasta: z.string(),
+  nome: z.string(),
+});
+
 export const AnalisarBody = z.object({
   nomeArquivo: z.string().min(1),
   arquivoBase64: z.string().min(1),

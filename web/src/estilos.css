@@ -178,6 +178,9 @@ button[type="submit"] { background: var(--destaque); color: #fff; border: 0; pad
 button:disabled { opacity: 0.6; cursor: default; }
 .exportar { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-top: 16px; }
 .exportar label { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 240px; }
+.exportar .linha-campo { display: flex; gap: 8px; align-items: center; }
+.exportar .linha-campo input { flex: 1; min-width: 0; }
+.exportar .sufixo { opacity: 0.7; white-space: nowrap; }
 @media (max-width: 600px) {
   .app { padding: 12px; }
   .conteudo { padding: 12px; }

@@ -79,8 +79,16 @@ export const api = {
   escolherPlanilha: () =>
     requisitar<{ caminho: string } | null>("/api/planilha/escolher", { method: "POST" }),
 
-  gerarPlanilha: (caminho: string) =>
-    requisitar<{ caminho: string }>("/api/planilha/gerar", { method: "POST", body: JSON.stringify({ caminho }) }),
+  planilhasDisponiveis: () => requisitar<{ nome: string; caminho: string }[]>("/api/planilha/disponiveis"),
+
+  escolherPasta: () =>
+    requisitar<{ caminho: string } | null>("/api/planilha/pasta/escolher", { method: "POST" }),
+
+  gerarPlanilha: (pasta: string, nome: string) =>
+    requisitar<{ caminho: string }>("/api/planilha/gerar", {
+      method: "POST",
+      body: JSON.stringify({ pasta, nome }),
+    }),
 
   exportarPlanilha: (caminho: string) =>
     requisitar<{ novas: number; existentes: number }>("/api/planilha", {
