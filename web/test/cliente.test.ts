@@ -34,4 +34,22 @@ describe("cliente HTTP", () => {
     expect(init.method).toBe("PATCH");
     expect(JSON.parse(String(init.body))).toEqual({ status: "oferta" });
   });
+
+  it("gerar planilha envia pasta e nome separados, sem caminho montado no navegador", async () => {
+    const fetchMock = vi.fn(async () => respostaJson({ caminho: "C:\\docs\\controle.xlsx" }, 201));
+    vi.stubGlobal("fetch", fetchMock);
+    await api.gerarPlanilha("C:\\docs", "controle");
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("/api/planilha/gerar");
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(String(init.body))).toEqual({ pasta: "C:\\docs", nome: "controle" });
+  });
+
+  it("lista as planilhas disponíveis pelo endpoint da pasta configurada", async () => {
+    const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => respostaJson([{ nome: "a.xlsx", caminho: "/app/planilhas/a.xlsx" }]));
+    vi.stubGlobal("fetch", fetchMock);
+    const lista = await api.planilhasDisponiveis();
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/planilha/disponiveis");
+    expect(lista).toEqual([{ nome: "a.xlsx", caminho: "/app/planilhas/a.xlsx" }]);
+  });
 });

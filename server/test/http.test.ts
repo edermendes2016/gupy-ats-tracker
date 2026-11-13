@@ -1,3 +1,4 @@
+import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { criarCasosDeUso } from "../src/aplicacao/casos.js";
 import { ErroConflito, ErroNaoEncontrada } from "../src/aplicacao/erros.js";
@@ -117,24 +118,77 @@ describe("DELETE /api/vagas/:id", () => {
 });
 
 describe("planilha: escolher e gerar", () => {
+  function montarPlanilha(gerarModelo = vi.fn(async () => undefined), opcoes: Parameters<typeof criarApp>[1] = {}) {
+    const casos = criarCasosDeUso({
+      vagas: { listar: vi.fn(), obter: vi.fn(), registrar: vi.fn(), atualizarStatus: vi.fn(), excluir: vi.fn() },
+      ranking: { ranking: vi.fn(), metricas: vi.fn() },
+      planilha: { exportar: vi.fn(), gerarModelo },
+      analise: { analisar: vi.fn() },
+    });
+    return { app: criarApp(casos, opcoes), gerarModelo };
+  }
+
   it("sem seletor nativo, responde 501 para a interface pedir o caminho digitado", async () => {
     app = montar();
     const r = await app.inject({ method: "POST", url: "/api/planilha/escolher" });
     expect(r.statusCode).toBe(501);
   });
 
-  it("gera o modelo no caminho informado e devolve o caminho", async () => {
-    const gerarPlanilha = vi.fn(async () => undefined);
-    const casos = criarCasosDeUso({
-      vagas: { listar: vi.fn(), obter: vi.fn(), registrar: vi.fn(), atualizarStatus: vi.fn(), excluir: vi.fn() },
-      ranking: { ranking: vi.fn(), metricas: vi.fn() },
-      planilha: { exportar: vi.fn(), gerarModelo: gerarPlanilha },
-      analise: { analisar: vi.fn() },
-    });
-    app = criarApp(casos);
-    const r = await app.inject({ method: "POST", url: "/api/planilha/gerar", payload: { caminho: "controle.xlsx" } });
+  it("sem seletor de pasta, responde 501 para a interface pedir a pasta digitada", async () => {
+    app = montar();
+    const r = await app.inject({ method: "POST", url: "/api/planilha/pasta/escolher" });
+    expect(r.statusCode).toBe(501);
+  });
+
+  it("lista as planilhas da pasta configurada e responde 501 sem pasta configurada", async () => {
+    app = montar();
+    expect((await app.inject({ method: "GET", url: "/api/planilha/disponiveis" })).statusCode).toBe(501);
+    const planilhasDisponiveis = vi.fn(async () => [{ nome: "controle.xlsx", caminho: "/app/planilhas/controle.xlsx" }]);
+    const { app: a } = montarPlanilha(undefined, { planilhasDisponiveis });
+    const r = await a.inject({ method: "GET", url: "/api/planilha/disponiveis" });
+    expect(r.statusCode).toBe(200);
+    expect(r.json()).toEqual([{ nome: "controle.xlsx", caminho: "/app/planilhas/controle.xlsx" }]);
+  });
+
+  it("devolve a pasta escolhida no seletor, ou 204 se a pessoa cancelar", async () => {
+    const escolherPasta = vi.fn(async () => "C:\\Docs")
+      .mockResolvedValueOnce("C:\\Docs")
+      .mockResolvedValueOnce(null);
+    const { app: a } = montarPlanilha(undefined, { escolherPasta });
+    const ok = await a.inject({ method: "POST", url: "/api/planilha/pasta/escolher" });
+    expect(ok.statusCode).toBe(200);
+    expect(ok.json()).toEqual({ caminho: "C:\\Docs" });
+    const cancelado = await a.inject({ method: "POST", url: "/api/planilha/pasta/escolher" });
+    expect(cancelado.statusCode).toBe(204);
+  });
+
+  it("gera a planilha na pasta com o nome informado, acrescentando .xlsx", async () => {
+    const { app: a, gerarModelo } = montarPlanilha();
+    const r = await a.inject({ method: "POST", url: "/api/planilha/gerar", payload: { pasta: "docs", nome: "controle" } });
     expect(r.statusCode).toBe(201);
-    expect(gerarPlanilha).toHaveBeenCalledWith("controle.xlsx");
+    const esperado = path.join("docs", "controle.xlsx");
+    expect(gerarModelo).toHaveBeenCalledWith(esperado);
+    expect(r.json()).toEqual({ caminho: esperado });
+  });
+
+  it("não duplica a extensão quando o nome já vem com .xlsx", async () => {
+    const { app: a, gerarModelo } = montarPlanilha();
+    await a.inject({ method: "POST", url: "/api/planilha/gerar", payload: { pasta: "docs", nome: "controle.xlsx" } });
+    expect(gerarModelo).toHaveBeenCalledWith(path.join("docs", "controle.xlsx"));
+  });
+
+  it("recusa nome com separador de pasta com 400 e não cria nada", async () => {
+    const { app: a, gerarModelo } = montarPlanilha();
+    const r = await a.inject({ method: "POST", url: "/api/planilha/gerar", payload: { pasta: "docs", nome: "../x" } });
+    expect(r.statusCode).toBe(400);
+    expect(gerarModelo).not.toHaveBeenCalled();
+  });
+
+  it("recusa pasta vazia com 400", async () => {
+    const { app: a, gerarModelo } = montarPlanilha();
+    const r = await a.inject({ method: "POST", url: "/api/planilha/gerar", payload: { pasta: "", nome: "controle" } });
+    expect(r.statusCode).toBe(400);
+    expect(gerarModelo).not.toHaveBeenCalled();
   });
 });
 

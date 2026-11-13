@@ -3,6 +3,7 @@ import Fastify, { type FastifyError, type FastifyInstance } from "fastify";
 import type { z, ZodError } from "zod";
 
 import type { CasosDeUso } from "../../aplicacao/casos.js";
+import { montarCaminhoXlsx } from "../../aplicacao/destino.js";
 import {
   ErroConflito,
   ErroEntradaInvalida,
@@ -16,6 +17,7 @@ import {
   AnalisarBody,
   AtualizarStatusBody,
   ExportarPlanilhaBody,
+  GerarPlanilhaBody,
   FiltroQuery,
   IdParams,
   MarcarMissaoBody,
@@ -45,7 +47,12 @@ const STATUS_HTTP: Array<[new (...a: any[]) => Error, number]> = [
 
 export function criarApp(
   casos: CasosDeUso,
-  opcoes: { logger?: boolean; escolherArquivo?: () => Promise<string | null> } = {},
+  opcoes: {
+    logger?: boolean;
+    escolherArquivo?: () => Promise<string | null>;
+    escolherPasta?: () => Promise<string | null>;
+    planilhasDisponiveis?: () => Promise<{ nome: string; caminho: string }[]>;
+  } = {},
 ): FastifyInstance {
   const app = Fastify({ logger: opcoes.logger ?? false });
 
@@ -160,8 +167,25 @@ export function criarApp(
     return { caminho };
   });
 
+  app.get("/api/planilha/disponiveis", async (_req, resposta) => {
+    if (!opcoes.planilhasDisponiveis) {
+      return resposta.status(501).send({ erro: "não há pasta de planilhas configurada: digite o caminho" });
+    }
+    return opcoes.planilhasDisponiveis();
+  });
+
+  app.post("/api/planilha/pasta/escolher", async (_req, resposta) => {
+    if (!opcoes.escolherPasta) {
+      return resposta.status(501).send({ erro: "seleção de pasta indisponível neste sistema: digite o caminho" });
+    }
+    const caminho = await opcoes.escolherPasta();
+    if (!caminho) return resposta.status(204).send();
+    return { caminho };
+  });
+
   app.post("/api/planilha/gerar", async (req, resposta) => {
-    const { caminho } = validar(ExportarPlanilhaBody, req.body);
+    const { pasta, nome } = validar(GerarPlanilhaBody, req.body);
+    const caminho = montarCaminhoXlsx(pasta, nome);
     await casos.gerarPlanilha(caminho);
     return resposta.status(201).send({ caminho });
   });
