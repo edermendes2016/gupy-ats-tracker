@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import threading
+import zipfile
 from concurrent import futures
 from datetime import date
 from pathlib import Path
@@ -161,8 +162,12 @@ class PlanilhaServicer(_Base):
         grpc = _grpc()
         vagas = armazenamento.carregar(self._caminho)
         try:
+            # Só chega aqui a planilha enviada pela interface: ela precisa ser o modelo de controle.
+            planilha.ler_modelo(Path(req.caminho).read_bytes())
             novas, existentes = planilha.exportar(Path(req.caminho), vagas)
-        except (OSError, ValueError) as e:
+        except ValueError as e:
+            context.abort(grpc.StatusCode.INVALID_ARGUMENT, str(e))
+        except (OSError, zipfile.BadZipFile) as e:
             context.abort(grpc.StatusCode.FAILED_PRECONDITION, f"não foi possível atualizar a planilha: {e}")
         return ppb.ExportarPlanilhaResponse(novas=novas, existentes=existentes)
 

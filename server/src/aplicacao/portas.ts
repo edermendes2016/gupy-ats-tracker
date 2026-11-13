@@ -47,9 +47,18 @@ export interface AnaliseRepositorio {
   analisar(entrada: EntradaAnalise): Promise<ResultadoAnalise>;
 }
 
+export interface ResultadoPlanilha {
+  /** Planilha atualizada, pronta para baixar. */
+  conteudo: Buffer;
+  novas: number;
+  existentes: number;
+}
+
 export interface PlanilhaRepositorio {
-  exportar(caminho: string): Promise<{ novas: number; existentes: number }>;
-  gerarModelo(caminho: string): Promise<void>;
+  /** Modelo em branco, para a pessoa baixar e preencher. */
+  modelo(): Promise<Buffer>;
+  /** Acrescenta as vagas à planilha enviada. Recusa o que não for o modelo de controle. */
+  atualizar(conteudo: Buffer): Promise<ResultadoPlanilha>;
 }
 
 /** Marcações diárias das missões de estudo e reforço (dia AAAA-MM-DD -> registro). */

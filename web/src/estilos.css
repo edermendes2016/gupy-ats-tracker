@@ -176,11 +176,13 @@ input, select, textarea, button { font: inherit; color: var(--texto); background
 button { cursor: pointer; }
 button[type="submit"] { background: var(--destaque); color: #fff; border: 0; padding: 8px 16px; cursor: pointer; }
 button:disabled { opacity: 0.6; cursor: default; }
-.exportar { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-top: 16px; }
-.exportar label { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 240px; }
-.exportar .linha-campo { display: flex; gap: 8px; align-items: center; }
-.exportar .linha-campo input { flex: 1; min-width: 0; }
-.exportar .sufixo { opacity: 0.7; white-space: nowrap; }
+.planilha-controle { display: block; }
+.planilha-controle h3 { margin: 0 0 6px; }
+.planilha-controle .ajuda { margin: 0 0 12px; }
+.acoes-planilha { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.botao-planilha { display: inline-block; padding: 8px 16px; border-radius: 8px; background: var(--destaque); color: #fff; cursor: pointer; text-decoration: none; border: 0; font: inherit; }
+.botao-planilha:focus-within, .botao-planilha:hover { filter: brightness(1.08); }
+.tutorial-planilha { margin: 12px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
 @media (max-width: 600px) {
   .app { padding: 12px; }
   .conteudo { padding: 12px; }

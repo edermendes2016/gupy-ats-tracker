@@ -1,7 +1,6 @@
-import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { criarCasosDeUso } from "../src/aplicacao/casos.js";
-import { ErroConflito, ErroNaoEncontrada } from "../src/aplicacao/erros.js";
+import { ErroConflito, ErroEntradaInvalida, ErroNaoEncontrada } from "../src/aplicacao/erros.js";
 import { criarApp } from "../src/apresentacao/http/app.js";
 import type { Vaga } from "../src/dominio/vaga.js";
 
@@ -26,7 +25,7 @@ function montar(sobrescrever: Partial<Parameters<typeof criarCasosDeUso>[0]["vag
       ranking: vi.fn(async () => [VAGA]),
       metricas: vi.fn(async () => ({ total: 1, enviadas: 0, chegaramEntrevista: 0, taxaConversao: 0 })),
     },
-    planilha: { exportar: vi.fn(async () => ({ novas: 0, existentes: 1 })), gerarModelo: vi.fn(async () => undefined) },
+    planilha: { modelo: vi.fn(), atualizar: vi.fn() },
     analise: { analisar: vi.fn(async () => RESULTADO_ANALISE) },
     hoje: () => "2026-02-03",
   });
@@ -80,12 +79,10 @@ describe("rotas HTTP", () => {
     expect((await app.inject({ method: "POST", url: "/api/vagas", payload: NOVA })).statusCode).toBe(409);
   });
 
-  it("atualiza status e exporta planilha", async () => {
+  it("atualiza status da vaga", async () => {
     app = montar();
     const s = await app.inject({ method: "PATCH", url: "/api/vagas/v1/status", payload: { status: "oferta" } });
     expect(s.statusCode).toBe(200);
-    const p = await app.inject({ method: "POST", url: "/api/planilha", payload: { caminho: "/tmp/x.xlsx" } });
-    expect(p.json()).toEqual({ novas: 0, existentes: 1 });
   });
 
   it("expõe ranking e métricas", async () => {
@@ -117,78 +114,70 @@ describe("DELETE /api/vagas/:id", () => {
   });
 });
 
-describe("planilha: escolher e gerar", () => {
-  function montarPlanilha(gerarModelo = vi.fn(async () => undefined), opcoes: Parameters<typeof criarApp>[1] = {}) {
+describe("planilha: baixar modelo e enviar planilha preenchida", () => {
+  function montarPlanilha(planilha: Partial<Parameters<typeof criarCasosDeUso>[0]["planilha"]> = {}) {
     const casos = criarCasosDeUso({
       vagas: { listar: vi.fn(), obter: vi.fn(), registrar: vi.fn(), atualizarStatus: vi.fn(), excluir: vi.fn() },
       ranking: { ranking: vi.fn(), metricas: vi.fn() },
-      planilha: { exportar: vi.fn(), gerarModelo },
+      planilha: {
+        modelo: vi.fn(async () => Buffer.from("MODELO")),
+        atualizar: vi.fn(async () => ({ conteudo: Buffer.from("ATUALIZADA"), novas: 2, existentes: 1 })),
+        ...planilha,
+      },
       analise: { analisar: vi.fn() },
     });
-    return { app: criarApp(casos, opcoes), gerarModelo };
+    return { app: criarApp(casos) };
   }
 
-  it("sem seletor nativo, responde 501 para a interface pedir o caminho digitado", async () => {
-    app = montar();
-    const r = await app.inject({ method: "POST", url: "/api/planilha/escolher" });
-    expect(r.statusCode).toBe(501);
-  });
-
-  it("sem seletor de pasta, responde 501 para a interface pedir a pasta digitada", async () => {
-    app = montar();
-    const r = await app.inject({ method: "POST", url: "/api/planilha/pasta/escolher" });
-    expect(r.statusCode).toBe(501);
-  });
-
-  it("lista as planilhas da pasta configurada e responde 501 sem pasta configurada", async () => {
-    app = montar();
-    expect((await app.inject({ method: "GET", url: "/api/planilha/disponiveis" })).statusCode).toBe(501);
-    const planilhasDisponiveis = vi.fn(async () => [{ nome: "controle.xlsx", caminho: "/app/planilhas/controle.xlsx" }]);
-    const { app: a } = montarPlanilha(undefined, { planilhasDisponiveis });
-    const r = await a.inject({ method: "GET", url: "/api/planilha/disponiveis" });
+  it("entrega o modelo em branco como download .xlsx", async () => {
+    const { app: a } = montarPlanilha();
+    const r = await a.inject({ method: "GET", url: "/api/planilha/modelo" });
     expect(r.statusCode).toBe(200);
-    expect(r.json()).toEqual([{ nome: "controle.xlsx", caminho: "/app/planilhas/controle.xlsx" }]);
+    expect(r.headers["content-type"]).toContain("spreadsheetml.sheet");
+    expect(r.headers["content-disposition"]).toContain("modelo-planilha-controle.xlsx");
+    expect(r.rawPayload.toString()).toBe("MODELO");
   });
 
-  it("devolve a pasta escolhida no seletor, ou 204 se a pessoa cancelar", async () => {
-    const escolherPasta = vi.fn(async () => "C:\\Docs")
-      .mockResolvedValueOnce("C:\\Docs")
-      .mockResolvedValueOnce(null);
-    const { app: a } = montarPlanilha(undefined, { escolherPasta });
-    const ok = await a.inject({ method: "POST", url: "/api/planilha/pasta/escolher" });
-    expect(ok.statusCode).toBe(200);
-    expect(ok.json()).toEqual({ caminho: "C:\\Docs" });
-    const cancelado = await a.inject({ method: "POST", url: "/api/planilha/pasta/escolher" });
-    expect(cancelado.statusCode).toBe(204);
+  it("recebe a planilha em base64, acrescenta as vagas e devolve a atualizada", async () => {
+    const atualizar = vi.fn(async (_c: Buffer) => ({ conteudo: Buffer.from("ATUALIZADA"), novas: 2, existentes: 1 }));
+    const { app: a } = montarPlanilha({ atualizar });
+    const r = await a.inject({
+      method: "POST",
+      url: "/api/planilha/atualizar",
+      payload: { arquivoBase64: Buffer.from("ENVIADA").toString("base64") },
+    });
+    expect(r.statusCode).toBe(200);
+    expect(atualizar.mock.calls[0][0].toString()).toBe("ENVIADA");
+    expect(r.json()).toEqual({ novas: 2, existentes: 1, arquivoBase64: Buffer.from("ATUALIZADA").toString("base64") });
   });
 
-  it("gera a planilha na pasta com o nome informado, acrescentando .xlsx", async () => {
-    const { app: a, gerarModelo } = montarPlanilha();
-    const r = await a.inject({ method: "POST", url: "/api/planilha/gerar", payload: { pasta: "docs", nome: "controle" } });
-    expect(r.statusCode).toBe(201);
-    const esperado = path.join("docs", "controle.xlsx");
-    expect(gerarModelo).toHaveBeenCalledWith(esperado);
-    expect(r.json()).toEqual({ caminho: esperado });
-  });
-
-  it("não duplica a extensão quando o nome já vem com .xlsx", async () => {
-    const { app: a, gerarModelo } = montarPlanilha();
-    await a.inject({ method: "POST", url: "/api/planilha/gerar", payload: { pasta: "docs", nome: "controle.xlsx" } });
-    expect(gerarModelo).toHaveBeenCalledWith(path.join("docs", "controle.xlsx"));
-  });
-
-  it("recusa nome com separador de pasta com 400 e não cria nada", async () => {
-    const { app: a, gerarModelo } = montarPlanilha();
-    const r = await a.inject({ method: "POST", url: "/api/planilha/gerar", payload: { pasta: "docs", nome: "../x" } });
+  it("recusa arquivo vazio com 400 sem chamar o serviço", async () => {
+    const atualizar = vi.fn();
+    const { app: a } = montarPlanilha({ atualizar });
+    const r = await a.inject({ method: "POST", url: "/api/planilha/atualizar", payload: { arquivoBase64: "" } });
     expect(r.statusCode).toBe(400);
-    expect(gerarModelo).not.toHaveBeenCalled();
+    expect(atualizar).not.toHaveBeenCalled();
   });
 
-  it("recusa pasta vazia com 400", async () => {
-    const { app: a, gerarModelo } = montarPlanilha();
-    const r = await a.inject({ method: "POST", url: "/api/planilha/gerar", payload: { pasta: "", nome: "controle" } });
+  it("recusa arquivo maior que 5 MB com 400", async () => {
+    const atualizar = vi.fn();
+    const { app: a } = montarPlanilha({ atualizar });
+    const grande = Buffer.alloc(5 * 1024 * 1024 + 1, 1).toString("base64");
+    const r = await a.inject({ method: "POST", url: "/api/planilha/atualizar", payload: { arquivoBase64: grande } });
     expect(r.statusCode).toBe(400);
-    expect(gerarModelo).not.toHaveBeenCalled();
+    expect(atualizar).not.toHaveBeenCalled();
+  });
+
+  it("repassa a recusa do serviço (arquivo que não é o modelo) como 400", async () => {
+    const atualizar = vi.fn(async () => { throw new ErroEntradaInvalida("esta planilha não é o modelo de controle"); });
+    const { app: a } = montarPlanilha({ atualizar });
+    const r = await a.inject({
+      method: "POST",
+      url: "/api/planilha/atualizar",
+      payload: { arquivoBase64: Buffer.from("x").toString("base64") },
+    });
+    expect(r.statusCode).toBe(400);
+    expect(r.json().erro).toContain("não é o modelo de controle");
   });
 });
 

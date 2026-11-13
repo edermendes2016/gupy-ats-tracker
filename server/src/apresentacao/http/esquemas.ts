@@ -44,13 +44,8 @@ export const AtualizarStatusBody = z.object({
   data: dataIso.optional(),
 });
 
-export const ExportarPlanilhaBody = z.object({
-  caminho: z.string().min(1),
-});
-
-export const GerarPlanilhaBody = z.object({
-  pasta: z.string(),
-  nome: z.string(),
+export const AtualizarPlanilhaBody = z.object({
+  arquivoBase64: z.string().min(1),
 });
 
 export const AnalisarBody = z.object({

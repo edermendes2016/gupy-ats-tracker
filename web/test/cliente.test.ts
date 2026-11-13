@@ -35,21 +35,16 @@ describe("cliente HTTP", () => {
     expect(JSON.parse(String(init.body))).toEqual({ status: "oferta" });
   });
 
-  it("gerar planilha envia pasta e nome separados, sem caminho montado no navegador", async () => {
-    const fetchMock = vi.fn(async () => respostaJson({ caminho: "C:\\docs\\controle.xlsx" }, 201));
-    vi.stubGlobal("fetch", fetchMock);
-    await api.gerarPlanilha("C:\\docs", "controle");
-    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
-    expect(url).toBe("/api/planilha/gerar");
-    expect(init.method).toBe("POST");
-    expect(JSON.parse(String(init.body))).toEqual({ pasta: "C:\\docs", nome: "controle" });
-  });
 
-  it("lista as planilhas disponíveis pelo endpoint da pasta configurada", async () => {
-    const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => respostaJson([{ nome: "a.xlsx", caminho: "/app/planilhas/a.xlsx" }]));
+
+  it("atualiza a planilha enviando o arquivo em base64 no corpo JSON", async () => {
+    const fetchMock = vi.fn(async () => respostaJson({ novas: 1, existentes: 0, arquivoBase64: "QQ==" }));
     vi.stubGlobal("fetch", fetchMock);
-    const lista = await api.planilhasDisponiveis();
-    expect(fetchMock.mock.calls[0][0]).toBe("/api/planilha/disponiveis");
-    expect(lista).toEqual([{ nome: "a.xlsx", caminho: "/app/planilhas/a.xlsx" }]);
+    const r = await api.atualizarPlanilha("QQ==");
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("/api/planilha/atualizar");
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(String(init.body))).toEqual({ arquivoBase64: "QQ==" });
+    expect(r).toEqual({ novas: 1, existentes: 0, arquivoBase64: "QQ==" });
   });
 });
