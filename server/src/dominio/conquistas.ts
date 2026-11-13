@@ -9,12 +9,25 @@ export const DIAS_SEM_FEEDBACK = 14;
 /** Etapas em que a vaga espera resposta da empresa. */
 const ESPERANDO: Status[] = ["candidatada", "triagem", "teste", "entrevista"];
 
+/** Candidaturas com desfecho que uma faixa de Match Score precisa juntar para liberar a calibração. */
+export const MINIMO_DESFECHOS_FAIXA = 10;
+
+/** Faixas de Match Score com a mesma divisão do relatório (Python): 40-59, 60-79 e 80-100. */
+export const FAIXAS_CALIBRACAO = [
+  { id: "calibracao-aposta", nome: "Aposta", minimo: 40, maximo: 59 },
+  { id: "calibracao-boa", nome: "Boa aderência", minimo: 60, maximo: 79 },
+  { id: "calibracao-alta", nome: "Alta aderência", minimo: 80, maximo: 100 },
+] as const;
+
 export const IDS_CONQUISTAS = [
   "nao-passou-triagem",
   "silencio",
   "quase-la",
   "primeira-entrevista",
   "contratado",
+  "calibracao-aposta",
+  "calibracao-boa",
+  "calibracao-alta",
 ] as const;
 export type IdConquista = (typeof IDS_CONQUISTAS)[number];
 
@@ -46,11 +59,60 @@ function maiorSilencio(vagas: Vaga[], hoje: string): { vaga: Vaga; dias: number 
   return maior;
 }
 
+/**
+ * Intervalo de Wilson (95%) para k de n, em percentual inteiro. Com poucos casos, a taxa
+ * simples engana; o intervalo mostra o quanto ainda não se sabe.
+ */
+export function intervaloWilson(k: number, n: number, z = 1.96): { inferior: number; superior: number } {
+  const p = k / n;
+  const z2 = z * z;
+  const centro = (p + z2 / (2 * n)) / (1 + z2 / n);
+  const meio = (z * Math.sqrt((p * (1 - p)) / n + z2 / (4 * n * n))) / (1 + z2 / n);
+  return {
+    inferior: Math.round(100 * Math.max(0, centro - meio)),
+    superior: Math.round(100 * Math.min(1, centro + meio)),
+  };
+}
+
+/** Vaga com desfecho: já teve resposta final (recusa, desistência, oferta) ou chegou à entrevista. */
+function temDesfecho(vaga: Vaga): boolean {
+  return ["recusada", "desistencia", "oferta"].includes(vaga.status) || alcancou(vaga, "entrevista");
+}
+
+/** Calibração de uma faixa: desfechos e os que chegaram à entrevista (ou oferta). */
+function calibracaoDaFaixa(vagas: Vaga[], minimo: number, maximo: number): { desfechos: number; entrevistas: number } {
+  const naFaixa = vagas.filter((v) => {
+    const score = Math.round(v.matchScore);
+    return score >= minimo && score <= maximo && temDesfecho(v);
+  });
+  return {
+    desfechos: naFaixa.length,
+    entrevistas: naFaixa.filter((v) => alcancou(v, "entrevista", "oferta")).length,
+  };
+}
+
+function conquistaDeCalibracao(vagas: Vaga[], faixa: (typeof FAIXAS_CALIBRACAO)[number]): Omit<Conquista, "id"> {
+  const { desfechos, entrevistas } = calibracaoDaFaixa(vagas, faixa.minimo, faixa.maximo);
+  const liberada = desfechos >= MINIMO_DESFECHOS_FAIXA;
+  const intervalo = liberada ? intervaloWilson(entrevistas, desfechos) : null;
+  return {
+    titulo: `Calibração: ${faixa.nome}`,
+    requisito: `Juntar ${MINIMO_DESFECHOS_FAIXA} candidaturas com desfecho na faixa de ${faixa.minimo} a ${faixa.maximo} de Match Score.`,
+    motivacao: liberada
+      ? "Dados suficientes para ler a faixa sem chute. Se ela não converte, o corte é que precisa mudar, não você."
+      : "Uma faixa só ensina alguma coisa com volume. Cada desfecho conta para a calibração.",
+    desbloqueada: liberada,
+    detalhe: intervalo
+      ? `${entrevistas} de ${desfechos} viraram entrevista (${Math.round((100 * entrevistas) / desfechos)}%, IC 95%: ${intervalo.inferior}% a ${intervalo.superior}%)`
+      : `Poucos dados ainda: ${desfechos} de ${MINIMO_DESFECHOS_FAIXA} desfechos`,
+  };
+}
+
 export function calcularConquistas(vagas: Vaga[], hoje: string, anonimo = false): Conquista[] {
   const silencio = maiorSilencio(vagas, hoje);
   const prefixo = silencio && !anonimo ? `${silencio.vaga.empresa}: ` : "";
 
-  const porId: Record<IdConquista, Omit<Conquista, "id">> = {
+  const porId: Partial<Record<IdConquista, Omit<Conquista, "id">>> = {
     "nao-passou-triagem": {
       titulo: "Não passou da triagem",
       requisito: "Ser recusado antes de qualquer teste ou entrevista.",
@@ -88,5 +150,7 @@ export function calcularConquistas(vagas: Vaga[], hoje: string, anonimo = false)
     },
   };
 
-  return IDS_CONQUISTAS.map((id) => ({ id, ...porId[id] }));
+  for (const faixa of FAIXAS_CALIBRACAO) porId[faixa.id] = conquistaDeCalibracao(vagas, faixa);
+
+  return IDS_CONQUISTAS.map((id) => ({ id, ...porId[id]! }));
 }

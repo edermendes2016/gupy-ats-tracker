@@ -31,12 +31,12 @@ describe("rotas de conquistas e missões", () => {
     return marcas;
   }
 
-  it("GET /api/conquistas devolve as cinco conquistas, sem empresa no modo anônimo", async () => {
+  it("GET /api/conquistas devolve as oito conquistas, sem empresa no modo anônimo", async () => {
     montar([vaga({ status: "recusada", historico: [{ data: HOJE, status: "candidatada" }] })]);
     const r = await app!.inject({ method: "GET", url: "/api/conquistas?anonimo=true" });
     expect(r.statusCode).toBe(200);
     const lista = r.json() as Array<{ id: string; titulo: string }>;
-    expect(lista).toHaveLength(5);
+    expect(lista).toHaveLength(8);
     expect(JSON.stringify(lista)).not.toContain("Acme");
   });
 
