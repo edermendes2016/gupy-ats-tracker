@@ -1,4 +1,7 @@
 // Clientes gRPC para o serviço Python. Os .proto ficam na raiz do repositório (proto/).
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as grpc from "@grpc/grpc-js";
 import * as protoLoader from "@grpc/proto-loader";
@@ -43,6 +46,15 @@ const pacote = grpc.loadPackageDefinition(
 ) as unknown as { gupy_tracker: { v1: Record<string, any> } };
 
 const { VagasService, RankingService, PlanilhaService, AnaliseService } = pacote.gupy_tracker.v1;
+
+async function comPastaTemporaria<T>(usar: (pasta: string) => Promise<T>): Promise<T> {
+  const pasta = await mkdtemp(path.join(os.tmpdir(), "planilha-"));
+  try {
+    return await usar(pasta);
+  } finally {
+    await rm(pasta, { recursive: true, force: true });
+  }
+}
 
 /** Traduz códigos gRPC em erros da aplicação. */
 export function traduzirErro(err: grpc.ServiceError): Error {
@@ -141,12 +153,21 @@ export function criarRepositoriosGrpc(endereco: string): Repositorios {
   };
 
   const planilha: PlanilhaRepositorio = {
-    async exportar(caminho) {
-      const res = await chamar<{ novas: number; existentes: number }>(planilhaCli, "Exportar", { caminho });
-      return { novas: Number(res.novas), existentes: Number(res.existentes) };
+    async modelo() {
+      return comPastaTemporaria(async (pasta) => {
+        const caminho = path.join(pasta, "modelo.xlsx");
+        await chamar(planilhaCli, "GerarModelo", { caminho });
+        return readFile(caminho);
+      });
     },
-    async gerarModelo(caminho) {
-      await chamar(planilhaCli, "GerarModelo", { caminho });
+    async atualizar(conteudo) {
+      return comPastaTemporaria(async (pasta) => {
+        // O serviço Python lê e grava o arquivo no disco: ele fica numa pasta temporária, apagada no fim.
+        const caminho = path.join(pasta, "planilha.xlsx");
+        await writeFile(caminho, conteudo);
+        const res = await chamar<{ novas: number; existentes: number }>(planilhaCli, "Exportar", { caminho });
+        return { conteudo: await readFile(caminho), novas: Number(res.novas), existentes: Number(res.existentes) };
+      });
     },
   };
 

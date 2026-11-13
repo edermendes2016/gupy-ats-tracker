@@ -1,3 +1,5 @@
+import io
+import zipfile
 import json
 import tempfile
 import unittest
@@ -272,3 +274,55 @@ class PlanilhaJaPreenchida(unittest.TestCase):
             v = {**vaga("c", "ORGAO PUBLICO", 80), "cargo": "dev", "data": "2026-11-12"}
             self.assertEqual(planilha.exportar(caminho, [{**v, "empresa": "Orgao Publico"}]), (1, 0))
             self.assertEqual(planilha.exportar(caminho, [{**v, "empresa": "Órgão Público"}]), (0, 1))
+
+
+class ModeloDeControle(unittest.TestCase):
+    """Modelo baixável: fontes padronizadas, envio validado e preenchimento de planilha enviada."""
+
+    VAGA = {"data": "2026-01-10", "empresa": "Acme", "cargo": "Dev", "status": "analisada",
+            "palavras_chave": ["Python"], "lacunas": ["Kubernetes"], "fonte": "Gupy", "url": "https://x"}
+
+    def test_todas_as_fontes_do_modelo_sao_calibri_11(self):
+        import re
+        from gupy_tracker import planilha
+        estilos = (planilha.PASTA_MODELO / "styles.xml").read_text(encoding="utf-8")
+        fontes = re.findall(r"<font>(.*?)</font>", re.search(r"<fonts[^>]*>(.*?)</fonts>", estilos, re.S).group(1), re.S)
+        self.assertTrue(fontes)
+        for f in fontes:
+            self.assertIn('<name val="Calibri"/>', f)
+            self.assertIn('<sz val="11"/>', f)
+
+    def test_modelo_gerado_passa_na_verificacao(self):
+        from gupy_tracker import planilha
+        with tempfile.TemporaryDirectory() as d:
+            caminho = Path(d) / "modelo.xlsx"
+            planilha.gerar_modelo(caminho)
+            planilha.ler_modelo(caminho.read_bytes())
+
+    def test_recusa_arquivo_que_nao_e_xlsx(self):
+        from gupy_tracker import planilha
+        with self.assertRaises(ValueError):
+            planilha.ler_modelo(b"isto nao e um zip")
+
+    def test_recusa_planilha_com_outras_colunas(self):
+        from gupy_tracker import planilha
+        with tempfile.TemporaryDirectory() as d:
+            caminho = Path(d) / "outra.xlsx"
+            planilha.gerar_modelo(caminho)
+            with zipfile.ZipFile(caminho) as z:
+                dados = {n: z.read(n) for n in z.namelist()}
+            dados[planilha.ABA] = dados[planilha.ABA].replace(b"Empresa", b"Empresa X", 1)
+            buf = io.BytesIO()
+            with zipfile.ZipFile(buf, "w") as z:
+                for n, c in dados.items():
+                    z.writestr(n, c)
+            with self.assertRaises(ValueError):
+                planilha.ler_modelo(buf.getvalue())
+
+    def test_preenche_a_planilha_enviada_sem_duplicar(self):
+        from gupy_tracker import planilha
+        with tempfile.TemporaryDirectory() as d:
+            caminho = Path(d) / "controle.xlsx"
+            planilha.gerar_modelo(caminho)
+            self.assertEqual(planilha.exportar(caminho, [self.VAGA]), (1, 0))
+            self.assertEqual(planilha.exportar(caminho, [self.VAGA]), (0, 1))

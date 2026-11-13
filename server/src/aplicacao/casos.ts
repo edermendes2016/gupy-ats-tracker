@@ -7,6 +7,7 @@ import type {
   AnaliseRepositorio,
   EntradaAnalise,
   PlanilhaRepositorio,
+  ResultadoPlanilha,
   MissoesRepositorio,
   RankingRepositorio,
   ResultadoAnalise,
@@ -83,12 +84,12 @@ export function criarCasosDeUso(dep: Dependencias) {
       return dep.analise.analisar(entrada);
     },
 
-    exportarPlanilha(caminho: string): Promise<{ novas: number; existentes: number }> {
-      return dep.planilha.exportar(caminho);
+    modeloPlanilha(): Promise<Buffer> {
+      return dep.planilha.modelo();
     },
 
-    gerarPlanilha(caminho: string): Promise<void> {
-      return dep.planilha.gerarModelo(caminho);
+    atualizarPlanilha(conteudo: Buffer): Promise<ResultadoPlanilha> {
+      return dep.planilha.atualizar(conteudo);
     },
 
     /** Personagem da aba Aventura. Em modo anônimo, a lista por vaga não sai. */

@@ -76,23 +76,9 @@ export const api = {
   analisarCurriculo: (entrada: EntradaAnalise) =>
     requisitar<ResultadoAnalise>("/api/analises", { method: "POST", body: JSON.stringify(entrada) }),
 
-  escolherPlanilha: () =>
-    requisitar<{ caminho: string } | null>("/api/planilha/escolher", { method: "POST" }),
-
-  planilhasDisponiveis: () => requisitar<{ nome: string; caminho: string }[]>("/api/planilha/disponiveis"),
-
-  escolherPasta: () =>
-    requisitar<{ caminho: string } | null>("/api/planilha/pasta/escolher", { method: "POST" }),
-
-  gerarPlanilha: (pasta: string, nome: string) =>
-    requisitar<{ caminho: string }>("/api/planilha/gerar", {
+  atualizarPlanilha: (arquivoBase64: string) =>
+    requisitar<{ novas: number; existentes: number; arquivoBase64: string }>("/api/planilha/atualizar", {
       method: "POST",
-      body: JSON.stringify({ pasta, nome }),
-    }),
-
-  exportarPlanilha: (caminho: string) =>
-    requisitar<{ novas: number; existentes: number }>("/api/planilha", {
-      method: "POST",
-      body: JSON.stringify({ caminho }),
+      body: JSON.stringify({ arquivoBase64 }),
     }),
 };

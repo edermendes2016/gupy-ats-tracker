@@ -3,7 +3,6 @@ import Fastify, { type FastifyError, type FastifyInstance } from "fastify";
 import type { z, ZodError } from "zod";
 
 import type { CasosDeUso } from "../../aplicacao/casos.js";
-import { montarCaminhoXlsx } from "../../aplicacao/destino.js";
 import {
   ErroConflito,
   ErroEntradaInvalida,
@@ -16,14 +15,16 @@ import {
   AnonimoQuery,
   AnalisarBody,
   AtualizarStatusBody,
-  ExportarPlanilhaBody,
-  GerarPlanilhaBody,
+  AtualizarPlanilhaBody,
   FiltroQuery,
   IdParams,
   MarcarMissaoBody,
   MissaoParams,
   NovaVagaBody,
 } from "./esquemas.js";
+
+const XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+const LIMITE_PLANILHA_BYTES = 5 * 1024 * 1024;
 
 /** Formato JSON de uma vaga, em camelCase, como a interface espera. */
 export const vagaJson = (v: Vaga) => v;
@@ -47,12 +48,7 @@ const STATUS_HTTP: Array<[new (...a: any[]) => Error, number]> = [
 
 export function criarApp(
   casos: CasosDeUso,
-  opcoes: {
-    logger?: boolean;
-    escolherArquivo?: () => Promise<string | null>;
-    escolherPasta?: () => Promise<string | null>;
-    planilhasDisponiveis?: () => Promise<{ nome: string; caminho: string }[]>;
-  } = {},
+  opcoes: { logger?: boolean } = {},
 ): FastifyInstance {
   const app = Fastify({ logger: opcoes.logger ?? false });
 
@@ -158,41 +154,25 @@ export function criarApp(
     });
   });
 
-  app.post("/api/planilha/escolher", async (_req, resposta) => {
-    if (!opcoes.escolherArquivo) {
-      return resposta.status(501).send({ erro: "seleção de arquivo indisponível neste sistema: digite o caminho" });
+  app.get("/api/planilha/modelo", async (_req, resposta) => {
+    const conteudo = await casos.modeloPlanilha();
+    return resposta
+      .header("content-type", XLSX)
+      .header("content-disposition", 'attachment; filename="modelo-planilha-controle.xlsx"')
+      .send(conteudo);
+  });
+
+  // Recebe a planilha preenchida, acrescenta as vagas e devolve o arquivo atualizado para baixar.
+  // O limite é maior que o padrão do Fastify (1 MB) porque o arquivo vai em base64 dentro do JSON.
+  app.post("/api/planilha/atualizar", { bodyLimit: LIMITE_PLANILHA_BYTES * 2 }, async (req) => {
+    const { arquivoBase64 } = validar(AtualizarPlanilhaBody, req.body);
+    const conteudo = Buffer.from(arquivoBase64, "base64");
+    if (conteudo.length === 0) throw new ErroEntradaInvalida("o arquivo enviado está vazio");
+    if (conteudo.length > LIMITE_PLANILHA_BYTES) {
+      throw new ErroEntradaInvalida("o arquivo passa de 5 MB: envie a planilha de controle, não outro arquivo");
     }
-    const caminho = await opcoes.escolherArquivo();
-    if (!caminho) return resposta.status(204).send();
-    return { caminho };
-  });
-
-  app.get("/api/planilha/disponiveis", async (_req, resposta) => {
-    if (!opcoes.planilhasDisponiveis) {
-      return resposta.status(501).send({ erro: "não há pasta de planilhas configurada: digite o caminho" });
-    }
-    return opcoes.planilhasDisponiveis();
-  });
-
-  app.post("/api/planilha/pasta/escolher", async (_req, resposta) => {
-    if (!opcoes.escolherPasta) {
-      return resposta.status(501).send({ erro: "seleção de pasta indisponível neste sistema: digite o caminho" });
-    }
-    const caminho = await opcoes.escolherPasta();
-    if (!caminho) return resposta.status(204).send();
-    return { caminho };
-  });
-
-  app.post("/api/planilha/gerar", async (req, resposta) => {
-    const { pasta, nome } = validar(GerarPlanilhaBody, req.body);
-    const caminho = montarCaminhoXlsx(pasta, nome);
-    await casos.gerarPlanilha(caminho);
-    return resposta.status(201).send({ caminho });
-  });
-
-  app.post("/api/planilha", async (req) => {
-    const { caminho } = validar(ExportarPlanilhaBody, req.body);
-    return casos.exportarPlanilha(caminho);
+    const { conteudo: atualizada, novas, existentes } = await casos.atualizarPlanilha(conteudo);
+    return { novas, existentes, arquivoBase64: atualizada.toString("base64") };
   });
 
   return app;

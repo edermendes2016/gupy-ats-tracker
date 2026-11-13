@@ -65,29 +65,6 @@ export function useExcluirVaga() {
   });
 }
 
-export function useEscolherPlanilha() {
-  return useMutation({ mutationFn: api.escolherPlanilha });
-}
-
-export function usePlanilhasDisponiveis(ativo: boolean) {
-  return useQuery({
-    queryKey: ["planilhas-disponiveis"],
-    queryFn: api.planilhasDisponiveis,
-    enabled: ativo,
-    retry: false,
-  });
-}
-
-export function useEscolherPasta() {
-  return useMutation({ mutationFn: api.escolherPasta });
-}
-
-export function useGerarPlanilha() {
-  return useMutation({
-    mutationFn: ({ pasta, nome }: { pasta: string; nome: string }) => api.gerarPlanilha(pasta, nome),
-  });
-}
-
 export function useAnalisarCurriculo() {
   return useMutation({ mutationFn: api.analisarCurriculo });
 }
@@ -100,6 +77,6 @@ export function useAtualizarStatus() {
   });
 }
 
-export function useExportarPlanilha() {
-  return useMutation({ mutationFn: api.exportarPlanilha });
+export function useAtualizarPlanilha() {
+  return useMutation({ mutationFn: (arquivoBase64: string) => api.atualizarPlanilha(arquivoBase64) });
 }

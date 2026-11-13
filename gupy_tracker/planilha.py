@@ -135,6 +135,33 @@ def _atualizar_linha(xml: str, n: int, vaga: dict, textos: dict, estilos: dict) 
     return xml[:m.start()] + nova + xml[m.end():], True
 
 
+def verificar_modelo(conteudo: dict[str, bytes]) -> None:
+    """Recusa planilha que não é o modelo de controle, antes de qualquer alteração.
+
+    Exige a aba e a tabela do modelo e, na linha 2, exatamente as colunas do cabeçalho
+    (sem diferença de caixa, acento ou espaço). Lança ValueError com a razão.
+    """
+    if ABA not in conteudo or TABELA not in conteudo:
+        raise ValueError("esta planilha não tem a aba e a tabela do modelo de controle: baixe o modelo e preencha ele")
+    sst = _strings_compartilhadas(conteudo)
+    linha = _linhas(conteudo[ABA].decode("utf-8"), sst).get(2, ("", {}, {}))[2]
+    recebido = [linha.get(col, "") for col in COLUNAS]
+    if [_chave(t) for t in recebido] != [_chave(t) for t in CABECALHO]:
+        raise ValueError("esta planilha não é o modelo de controle: as colunas da linha 2 não batem com o modelo")
+
+
+def ler_modelo(conteudo: bytes) -> dict[str, bytes]:
+    """Abre o .xlsx em memória e confirma que é o modelo de controle."""
+    import io
+    try:
+        with zipfile.ZipFile(io.BytesIO(conteudo)) as z:
+            dados = {nome: z.read(nome) for nome in z.namelist()}
+    except zipfile.BadZipFile as e:
+        raise ValueError("o arquivo enviado não é uma planilha .xlsx") from e
+    verificar_modelo(dados)
+    return dados
+
+
 def exportar(caminho: Path, vagas: list[dict]) -> tuple[int, int]:
     """Acrescenta uma linha por vaga nova e completa as colunas de linhas já existentes.
 

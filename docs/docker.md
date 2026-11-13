@@ -60,16 +60,14 @@ Depois, recarregue a página. As empresas são fictícias.
 
 ## 7. (Opcional) Use uma planilha de controle
 
-Se você acompanha as candidaturas em uma planilha Excel, o sistema pode preenchê-la.
+A planilha de controle é feita pela própria página, sem digitar caminho nenhum:
 
-1. Crie uma pasta chamada `planilhas` dentro da pasta do projeto (ou aponte `GUPY_PLANILHAS` para a pasta onde sua planilha já está) e coloque nela o arquivo `.xlsx`.
-2. Na página, clique em **Abrir planilha**. Como o navegador não enxerga o caminho real do arquivo no Docker, o sistema lista os `.xlsx` da pasta `planilhas` e você escolhe um deles. O arquivo original é usado, sem cópia.
-3. Para criar uma planilha nova, clique em **Gerar planilha**, informe a **pasta** no formato do contêiner (`/app/planilhas`) e digite só o **nome** do arquivo, por exemplo `controle`. O `.xlsx` é acrescentado sozinho. Se já existir um arquivo com esse nome, o sistema não substitui: escolha outro nome.
-4. Clique em **Exportar planilha**. O sistema adiciona uma linha para cada vaga que ainda não está na planilha. Vagas já existentes não são duplicadas.
+1. Clique em **Baixar modelo** e salve o arquivo no seu computador.
+2. Preencha a planilha no Excel ou no Google Planilhas, sem renomear as colunas da linha 2.
+3. Clique em **Enviar planilha preenchida** e escolha o arquivo. O sistema acrescenta as vagas do ranking, sem duplicar as que já estão lá.
+4. Clique em **Baixar planilha atualizada** e use essa versão como sua planilha de controle.
 
-No Windows, rodando sem Docker, os botões **Escolher pasta** e **Abrir planilha** abrem a janela do próprio Windows.
-
-Observação: o sistema preenche a planilha a partir das vagas cadastradas. Ele não importa linhas de uma planilha existente.
+Não é preciso montar nenhuma pasta no Docker: o arquivo vai e volta pelo navegador. Se você enviar outro arquivo (um PDF, ou uma planilha de outro modelo), a página recusa e explica o motivo. O botão **Tutorial**, na mesma seção, mostra esses passos.
 
 ## 8. Modo anônimo
 

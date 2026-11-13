@@ -11,7 +11,4 @@ services:
       - ./private:/app/private
       # Planilha de acompanhamento: aponte GUPY_PLANILHAS para a pasta onde ela está.
       - ${GUPY_PLANILHAS:-./planilhas}:/app/planilhas
-    environment:
-      # Pasta de planilhas dentro do contêiner: a interface lista os .xlsx dela no botão "Abrir planilha".
-      GUPY_PLANILHAS_PASTA: /app/planilhas
     restart: unless-stopped
