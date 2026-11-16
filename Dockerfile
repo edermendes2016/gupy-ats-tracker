@@ -17,7 +17,7 @@ COPY server/package.json server/package-lock.json ./
 RUN npm ci
 
 # 3) Imagem final.
-FROM python:3.12-slim
+FROM python:3.15-slim
 # pdftotext (poppler) é necessário para ler currículos em PDF.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends poppler-utils \
