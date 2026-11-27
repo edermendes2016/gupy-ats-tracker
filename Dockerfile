@@ -3,7 +3,7 @@
 # BFF é exposto, na porta 3000. Dados reais NÃO entram na imagem: entram por volume.
 
 # 1) Interface: compila o React.
-FROM node:22-slim AS web
+FROM node:25-slim AS web
 WORKDIR /app/web
 COPY web/package.json web/package-lock.json ./
 RUN npm ci
@@ -11,7 +11,7 @@ COPY web/ ./
 RUN npm run build
 
 # 2) Dependências do BFF.
-FROM node:22-slim AS bff
+FROM node:25-slim AS bff
 WORKDIR /app/server
 COPY server/package.json server/package-lock.json ./
 RUN npm ci
